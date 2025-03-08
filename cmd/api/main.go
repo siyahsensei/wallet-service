@@ -16,7 +16,9 @@ import (
 
 	"siyahsensei/wallet-service/api/handlers"
 	"siyahsensei/wallet-service/configs"
+	"siyahsensei/wallet-service/domain/account"
 	"siyahsensei/wallet-service/domain/user"
+	"siyahsensei/wallet-service/infrastructure/persistence/accountrepo"
 	"siyahsensei/wallet-service/infrastructure/persistence/userrepo"
 	"siyahsensei/wallet-service/internal/pkg/auth"
 	customLogger "siyahsensei/wallet-service/internal/pkg/logger"
@@ -58,9 +60,11 @@ func main() {
 
 	// Initialize repositories
 	userRepo := userrepo.NewPostgresRepository(db)
+	accountRepo := accountrepo.NewPostgresRepository(db)
 
 	// Initialize services
 	userService := user.NewService(userRepo, config.JWTSecret, config.TokenExpiry)
+	accountService := account.NewService(accountRepo)
 
 	// Initialize JWT authentication middleware
 	jwtMiddleware := auth.NewJWTMiddleware(config.JWTSecret)
@@ -81,14 +85,14 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-
-
 	// Initialize API handlers
 	authHandler := handlers.NewAuthHandler(userService, jwtMiddleware)
+	accountHandler := handlers.NewAccountHandler(accountService)
 
 	// API routes
 	api := app.Group("/api")
 	authHandler.RegisterRoutes(api.Group("/auth"), jwtMiddleware.Middleware())
+	accountHandler.RegisterRoutes(api.Group("/accounts"), jwtMiddleware.Middleware())
 
 	// Add health check route
 	app.Get("/health", func(c *fiber.Ctx) error {
