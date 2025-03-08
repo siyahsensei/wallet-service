@@ -20,16 +20,16 @@ func NewAssetHandler(assetService *asset.Service) *AssetHandler {
 }
 
 type CreateAssetRequest struct {
-	AccountID     string          `json:"account_id" validate:"required"`
+	AccountID     string          `json:"accountId" validate:"required"`
 	Name          string          `json:"name" validate:"required"`
 	Type          asset.AssetType `json:"type" validate:"required"`
 	Symbol        string          `json:"symbol"`
 	Quantity      float64         `json:"quantity" validate:"required"`
-	PurchasePrice float64         `json:"purchase_price" validate:"required"`
-	CurrentPrice  float64         `json:"current_price" validate:"required"`
+	PurchasePrice float64         `json:"purchasePrice" validate:"required"`
+	CurrentPrice  float64         `json:"currentPrice" validate:"required"`
 	Currency      string          `json:"currency" validate:"required"`
 	Notes         string          `json:"notes"`
-	PurchaseDate  string          `json:"purchase_date" validate:"required"` // Format: "2006-01-02"
+	PurchaseDate  string          `json:"purchaseDate" validate:"required"`
 }
 
 type UpdateAssetRequest struct {
@@ -37,31 +37,31 @@ type UpdateAssetRequest struct {
 	Type          asset.AssetType `json:"type,omitempty"`
 	Symbol        string          `json:"symbol,omitempty"`
 	Quantity      *float64        `json:"quantity,omitempty"`
-	PurchasePrice *float64        `json:"purchase_price,omitempty"`
-	CurrentPrice  *float64        `json:"current_price,omitempty"`
+	PurchasePrice *float64        `json:"purchasePrice,omitempty"`
+	CurrentPrice  *float64        `json:"currentPrice,omitempty"`
 	Currency      string          `json:"currency,omitempty"`
 	Notes         string          `json:"notes,omitempty"`
-	PurchaseDate  string          `json:"purchase_date,omitempty"` // Format: "2006-01-02"
+	PurchaseDate  string          `json:"purchaseDate,omitempty"`
 }
 
 type AssetResponse struct {
 	ID                   string          `json:"id"`
-	AccountID            string          `json:"account_id"`
+	AccountID            string          `json:"accountId"`
 	Name                 string          `json:"name"`
 	Type                 asset.AssetType `json:"type"`
 	Symbol               string          `json:"symbol"`
 	Quantity             float64         `json:"quantity"`
-	PurchasePrice        float64         `json:"purchase_price"`
-	CurrentPrice         float64         `json:"current_price"`
+	PurchasePrice        float64         `json:"purchasePrice"`
+	CurrentPrice         float64         `json:"currentPrice"`
 	Currency             string          `json:"currency"`
 	Notes                string          `json:"notes"`
-	PurchaseDate         string          `json:"purchase_date"`
-	CurrentValue         float64         `json:"current_value"`
-	ProfitLoss           float64         `json:"profit_loss"`
-	ProfitLossPercentage float64         `json:"profit_loss_percentage"`
-	LastUpdated          string          `json:"last_updated"`
-	CreatedAt            string          `json:"created_at"`
-	UpdatedAt            string          `json:"updated_at"`
+	PurchaseDate         string          `json:"purchaseDate"`
+	CurrentValue         float64         `json:"currentValue"`
+	ProfitLoss           float64         `json:"profitLoss"`
+	ProfitLossPercentage float64         `json:"profitLossPercentage"`
+	LastUpdated          string          `json:"lastUpdated"`
+	CreatedAt            string          `json:"createdAt"`
+	UpdatedAt            string          `json:"updatedAt"`
 }
 
 func toAssetResponse(a *asset.Asset) *AssetResponse {

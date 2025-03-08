@@ -36,20 +36,20 @@ const (
 
 type Asset struct {
 	ID            uuid.UUID `json:"id" db:"id"`
-	AccountID     uuid.UUID `json:"account_id" db:"account_id"`
-	UserID        uuid.UUID `json:"user_id" db:"user_id"`
+	AccountID     uuid.UUID `json:"accountId" db:"account_id"`
+	UserID        uuid.UUID `json:"userId" db:"user_id"`
 	Name          string    `json:"name" db:"name"`
 	Type          AssetType `json:"type" db:"type"`
 	Symbol        string    `json:"symbol" db:"symbol"`
 	Quantity      float64   `json:"quantity" db:"quantity"`
-	PurchasePrice float64   `json:"purchase_price" db:"purchase_price"`
-	CurrentPrice  float64   `json:"current_price" db:"current_price"`
+	PurchasePrice float64   `json:"purchasePrice" db:"purchase_price"`
+	CurrentPrice  float64   `json:"currentPrice" db:"current_price"`
 	Currency      string    `json:"currency" db:"currency"`
 	Notes         string    `json:"notes" db:"notes"`
-	PurchaseDate  time.Time `json:"purchase_date" db:"purchase_date"`
-	LastUpdated   time.Time `json:"last_updated" db:"last_updated"`
-	CreatedAt     time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at" db:"updated_at"`
+	PurchaseDate  time.Time `json:"purchaseDate" db:"purchase_date"`
+	LastUpdated   time.Time `json:"lastUpdated" db:"last_updated"`
+	CreatedAt     time.Time `json:"createdAt" db:"created_at"`
+	UpdatedAt     time.Time `json:"updatedAt" db:"updated_at"`
 }
 
 func NewAsset(

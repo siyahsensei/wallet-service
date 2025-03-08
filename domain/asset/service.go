@@ -9,14 +9,14 @@ import (
 )
 
 type AssetPerformance struct {
-	AssetID        uuid.UUID `json:"asset_id"`
+	AssetID        uuid.UUID `json:"assetId"`
 	Name           string    `json:"name"`
 	Symbol         string    `json:"symbol"`
 	Type           AssetType `json:"type"`
-	InitialValue   float64   `json:"initial_value"`
-	CurrentValue   float64   `json:"current_value"`
-	ProfitLoss     float64   `json:"profit_loss"`
-	ProfitLossPerc float64   `json:"profit_loss_percentage"`
+	InitialValue   float64   `json:"initialValue"`
+	CurrentValue   float64   `json:"currentValue"`
+	ProfitLoss     float64   `json:"profitLoss"`
+	ProfitLossPerc float64   `json:"profitLossPercentage"`
 	Currency       string    `json:"currency"`
 }
 
