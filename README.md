@@ -82,37 +82,40 @@ go run cmd/worker/main.go
 
 ### Authentication
 
--   `POST /api/v1/auth/register` - Register a new user
--   `POST /api/v1/auth/login` - User login
--   `GET /api/v1/auth/me` - View current user information
+-   `POST /api/auth/register` - Register a new user
+-   `POST /api/auth/login` - User login
+-   `GET /api/auth/me` - View current user information
+-   `PUT /api/auth/me` - User update
+-   `PUT /api/auth/change-password` - User change password
+-   `DELETE /api/auth/me` - User delete
 
 ### Accounts
 
--   `GET /api/v1/accounts` - List all accounts
--   `POST /api/v1/accounts` - Create a new account
--   `GET /api/v1/accounts/{id}` - View a specific account
--   `PUT /api/v1/accounts/{id}` - Update account information
--   `DELETE /api/v1/accounts/{id}` - Delete an account
--   `POST /api/v1/accounts/{id}/credentials` - Set account API credentials
--   `GET /api/v1/accounts/types` - List available account types
+-   `GET /api/accounts` - List all accounts
+-   `POST /api/accounts` - Create a new account
+-   `GET /api/accounts/{id}` - View a specific account
+-   `PUT /api/accounts/{id}` - Update account information
+-   `DELETE /api/accounts/{id}` - Delete an account
+-   `POST /api/accounts/{id}/credentials` - Set account API credentials
+-   `GET /api/accounts/types` - List available account types
 
 ### Assets
 
--   `GET /api/v1/assets` - List all assets
--   `POST /api/v1/assets` - Add a new asset
--   `GET /api/v1/assets/{id}` - View a specific asset
--   `PUT /api/v1/assets/{id}` - Update asset information
--   `DELETE /api/v1/assets/{id}` - Delete an asset
--   `GET /api/v1/assets/types` - List available asset types
+-   `GET /api/assets` - List all assets
+-   `POST /api/assets` - Add a new asset
+-   `GET /api/assets/{id}` - View a specific asset
+-   `PUT /api/assets/{id}` - Update asset information
+-   `DELETE /api/assets/{id}` - Delete an asset
+-   `GET /api/assets/types` - List available asset types
 
 ### Transactions
 
--   `GET /api/v1/transactions` - List all transactions
--   `POST /api/v1/transactions` - Add a new transaction
--   `GET /api/v1/transactions/{id}` - View a specific transaction
--   `PUT /api/v1/transactions/{id}` - Update transaction information
--   `DELETE /api/v1/transactions/{id}` - Delete a transaction
--   `GET /api/v1/transactions/types` - List available transaction types
+-   `GET /api/transactions` - List all transactions
+-   `POST /api/transactions` - Add a new transaction
+-   `GET /api/transactions/{id}` - View a specific transaction
+-   `PUT /api/transactions/{id}` - Update transaction information
+-   `DELETE /api/transactions/{id}` - Delete a transaction
+-   `GET /api/transactions/types` - List available transaction types
 
 ## Project Structure
 

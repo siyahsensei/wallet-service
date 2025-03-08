@@ -254,7 +254,7 @@ func (h *AuthHandler) RegisterRoutes(router fiber.Router, authMiddleware fiber.H
 	router.Post("/register", h.Register)
 	router.Post("/login", h.Login)
 	router.Get("/me", authMiddleware, h.Me)
-	router.Put("/", authMiddleware, h.UpdateUser)
+	router.Put("/me", authMiddleware, h.UpdateUser)
 	router.Put("/change-password", authMiddleware, h.ChangePassword)
-	router.Delete("/", authMiddleware, h.DeleteUser)
+	router.Delete("/me", authMiddleware, h.DeleteUser)
 }

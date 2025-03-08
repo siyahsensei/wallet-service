@@ -82,37 +82,40 @@ go run cmd/worker/main.go
 
 ### Kimlik Doğrulama
 
-- `POST /api/v1/auth/register` - Yeni kullanıcı kaydı
-- `POST /api/v1/auth/login` - Kullanıcı girişi
-- `GET /api/v1/auth/me` - Mevcut kullanıcı bilgilerini görüntüleme
+-   `POST /api/auth/register` - Yeni kullanıcı kaydı
+-   `POST /api/auth/login` - Kullanıcı girişi
+-   `GET /api/auth/me` - Mevcut kullanıcı bilgilerini görüntüleme
+-   `PUT /api/auth/me` - Kullanıcı güncelleme
+-   `PUT /api/auth/change-password` - Kullanıcı şifre değiştirme
+-   `DELETE /api/auth/me` - Kullanıcı silme
 
 ### Hesaplar
 
-- `GET /api/v1/accounts` - Tüm hesapları listele
-- `POST /api/v1/accounts` - Yeni hesap oluştur
-- `GET /api/v1/accounts/{id}` - Belirli bir hesabı görüntüle
-- `PUT /api/v1/accounts/{id}` - Hesap bilgilerini güncelle
-- `DELETE /api/v1/accounts/{id}` - Hesabı sil
-- `POST /api/v1/accounts/{id}/credentials` - Hesap API kimlik bilgilerini ayarla
-- `GET /api/v1/accounts/types` - Mevcut hesap tiplerini listele
+-   `GET /api/accounts` - Tüm hesapları listele
+-   `POST /api/accounts` - Yeni hesap oluştur
+-   `GET /api/accounts/{id}` - Belirli bir hesabı görüntüle
+-   `PUT /api/accounts/{id}` - Hesap bilgilerini güncelle
+-   `DELETE /api/accounts/{id}` - Hesabı sil
+-   `POST /api/accounts/{id}/credentials` - Hesap API kimlik bilgilerini ayarla
+-   `GET /api/accounts/types` - Mevcut hesap tiplerini listele
 
 ### Varlıklar
 
-- `GET /api/v1/assets` - Tüm varlıkları listele
-- `POST /api/v1/assets` - Yeni varlık ekle
-- `GET /api/v1/assets/{id}` - Belirli bir varlığı görüntüle
-- `PUT /api/v1/assets/{id}` - Varlık bilgilerini güncelle
-- `DELETE /api/v1/assets/{id}` - Varlığı sil
-- `GET /api/v1/assets/types` - Mevcut varlık tiplerini listele
+-   `GET /api/assets` - Tüm varlıkları listele
+-   `POST /api/assets` - Yeni varlık ekle
+-   `GET /api/assets/{id}` - Belirli bir varlığı görüntüle
+-   `PUT /api/assets/{id}` - Varlık bilgilerini güncelle
+-   `DELETE /api/assets/{id}` - Varlığı sil
+-   `GET /api/assets/types` - Mevcut varlık tiplerini listele
 
 ### İşlemler
 
-- `GET /api/v1/transactions` - Tüm işlemleri listele
-- `POST /api/v1/transactions` - Yeni işlem ekle
-- `GET /api/v1/transactions/{id}` - Belirli bir işlemi görüntüle
-- `PUT /api/v1/transactions/{id}` - İşlem bilgilerini güncelle
-- `DELETE /api/v1/transactions/{id}` - İşlemi sil
-- `GET /api/v1/transactions/types` - Mevcut işlem tiplerini listele
+-   `GET /api/transactions` - Tüm işlemleri listele
+-   `POST /api/transactions` - Yeni işlem ekle
+-   `GET /api/transactions/{id}` - Belirli bir işlemi görüntüle
+-   `PUT /api/transactions/{id}` - İşlem bilgilerini güncelle
+-   `DELETE /api/transactions/{id}` - İşlemi sil
+-   `GET /api/transactions/types` - Mevcut işlem tiplerini listele
 
 ## Proje Yapısı
 
