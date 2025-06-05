@@ -20,6 +20,26 @@ func NewAssetHandler(assetService *asset.Handler) *AssetHandler {
 	}
 }
 
+// Request models (without UserID for security)
+type CreateAssetRequest struct {
+	AccountID    string          `json:"accountId" validate:"required"`
+	DefinitionID string          `json:"definitionId" validate:"required"`
+	Type         asset.AssetType `json:"type" validate:"required"`
+	Quantity     float64         `json:"quantity" validate:"required"`
+	Notes        string          `json:"notes"`
+	PurchaseDate int64           `json:"purchaseDate" validate:"required"`
+}
+
+type UpdateAssetRequest struct {
+	AccountID    string          `json:"accountId" validate:"required"`
+	DefinitionID string          `json:"definitionId" validate:"required"`
+	Type         asset.AssetType `json:"type" validate:"required"`
+	Quantity     float64         `json:"quantity" validate:"required"`
+	Notes        string          `json:"notes"`
+	PurchaseDate int64           `json:"purchaseDate" validate:"required"`
+}
+
+// Response models
 type AssetResponse struct {
 	ID           string    `json:"id"`
 	UserID       string    `json:"userId"`
@@ -84,21 +104,30 @@ func toAssetPerformanceResponse(ap *asset.AssetPerformance) AssetPerformanceResp
 }
 
 func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
+	userIDValue, ok := c.Locals("userID").(string)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized",
 		})
 	}
 
-	var command asset.CreateAssetCommand
-	if err := c.BodyParser(&command); err != nil {
+	var req CreateAssetRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	command.UserID = userIDValue.String()
+	// Map request to command with UserID from JWT token
+	command := asset.CreateAssetCommand{
+		UserID:       userIDValue,
+		AccountID:    req.AccountID,
+		DefinitionID: req.DefinitionID,
+		Type:         req.Type,
+		Quantity:     req.Quantity,
+		Notes:        req.Notes,
+		PurchaseDate: req.PurchaseDate,
+	}
 
 	createdAsset, err := h.assetService.HandleCreateAssetCommand(c.Context(), command)
 	if err != nil {
@@ -113,7 +142,7 @@ func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 }
 
 func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
+	userIDValue, ok := c.Locals("userID").(string)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized",
@@ -127,15 +156,24 @@ func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {
 		})
 	}
 
-	var command asset.UpdateAssetCommand
-	if err := c.BodyParser(&command); err != nil {
+	var req UpdateAssetRequest
+	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	command.ID = assetID
-	command.UserID = userIDValue.String()
+	// Map request to command with UserID from JWT token and ID from URL params
+	command := asset.UpdateAssetCommand{
+		ID:           assetID,
+		UserID:       userIDValue,
+		AccountID:    req.AccountID,
+		DefinitionID: req.DefinitionID,
+		Type:         req.Type,
+		Quantity:     req.Quantity,
+		Notes:        req.Notes,
+		PurchaseDate: req.PurchaseDate,
+	}
 
 	updatedAsset, err := h.assetService.HandleUpdateAssetCommand(c.Context(), command)
 	if err != nil {

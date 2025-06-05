@@ -20,18 +20,6 @@ func NewAuthRoute(userService *user.Handler, jwtAuth *auth.JWTMiddleware) *AuthR
 	}
 }
 
-type RegisterRequest struct {
-	Email     string `json:"email" validate:"required,email"`
-	Password  string `json:"password" validate:"required,min=8"`
-	FirstName string `json:"firstName" validate:"required"`
-	LastName  string `json:"lastName" validate:"required"`
-}
-
-type LoginRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
-}
-
 type TokenResponse struct {
 	Token string      `json:"token"`
 	User  *UserPublic `json:"user"`
@@ -70,20 +58,14 @@ func toPublicUser(u *user.User) *UserPublic {
 }
 
 func (h *AuthRoute) Register(c *fiber.Ctx) error {
-	var req RegisterRequest
-	if err := c.BodyParser(&req); err != nil {
+	var command user.RegisterUserCommand
+	if err := c.BodyParser(&command); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	newUser, err := h.userService.RegisterUser(
-		c.Context(),
-		req.Email,
-		req.Password,
-		req.FirstName,
-		req.LastName,
-	)
+	newUser, err := h.userService.HandleRegisterUserCommand(c.Context(), command)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
@@ -104,30 +86,23 @@ func (h *AuthRoute) Register(c *fiber.Ctx) error {
 }
 
 func (h *AuthRoute) Login(c *fiber.Ctx) error {
-	var req LoginRequest
-	if err := c.BodyParser(&req); err != nil {
+	var command user.LoginUserCommand
+	if err := c.BodyParser(&command); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	token, err := h.userService.LoginUser(c.Context(), req.Email, req.Password)
+	loginResponse, err := h.userService.HandleLoginUserCommand(c.Context(), command)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid credentials",
 		})
 	}
 
-	userInfo, err := h.userService.GetUserByEmail(c.Context(), req.Email)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to retrieve user information",
-		})
-	}
-
 	return c.Status(fiber.StatusOK).JSON(TokenResponse{
-		Token: token,
-		User:  toPublicUser(userInfo),
+		Token: loginResponse.Token,
+		User:  toPublicUser(loginResponse.User),
 	})
 }
 
@@ -139,7 +114,11 @@ func (h *AuthRoute) Me(c *fiber.Ctx) error {
 		})
 	}
 
-	userInfo, err := h.userService.GetUserByID(c.Context(), userIDValue)
+	query := user.GetUserByIDQuery{
+		ID: userIDValue.String(),
+	}
+
+	userInfo, err := h.userService.HandleGetUserByIDQuery(c.Context(), query)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to retrieve user information",
@@ -166,18 +145,14 @@ func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
-	userInfo, err := h.userService.GetUserByID(c.Context(), userIDValue)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to retrieve user information",
-		})
+	command := user.UpdateUserCommand{
+		ID:        userIDValue.String(),
+		Email:     req.Email,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
 	}
 
-	userInfo.FirstName = req.FirstName
-	userInfo.LastName = req.LastName
-	userInfo.Email = req.Email
-
-	err = h.userService.UpdateUser(c.Context(), userInfo)
+	updatedUser, err := h.userService.HandleUpdateUserCommand(c.Context(), command)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to update user information",
@@ -185,7 +160,7 @@ func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"user": toPublicUser(userInfo),
+		"user": toPublicUser(updatedUser),
 	})
 }
 
@@ -204,7 +179,13 @@ func (h *AuthRoute) ChangePassword(c *fiber.Ctx) error {
 		})
 	}
 
-	err := h.userService.ChangePassword(c.Context(), userIDValue, req.OldPassword, req.NewPassword)
+	command := user.ChangePasswordCommand{
+		UserID:      userIDValue.String(),
+		OldPassword: req.OldPassword,
+		NewPassword: req.NewPassword,
+	}
+
+	err := h.userService.HandleChangePasswordCommand(c.Context(), command)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to change password",
@@ -231,17 +212,15 @@ func (h *AuthRoute) DeleteUser(c *fiber.Ctx) error {
 		})
 	}
 
-	err := h.userService.ValidateUserPassword(c.Context(), userIDValue, req.Password)
+	command := user.DeleteUserCommand{
+		UserID:   userIDValue.String(),
+		Password: req.Password,
+	}
+
+	err := h.userService.HandleDeleteUserCommand(c.Context(), command)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid password",
-		})
-	}
-
-	err = h.userService.DeleteUser(c.Context(), userIDValue)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Failed to delete user",
 		})
 	}
 
