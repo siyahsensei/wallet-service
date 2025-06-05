@@ -1,4 +1,4 @@
-package handlers
+package routes
 
 import (
 	"siyahsensei/wallet-service/domain/user"
@@ -8,13 +8,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type AuthHandler struct {
-	userService *user.Service
+type AuthRoute struct {
+	userService *user.Handler
 	jwtAuth     *auth.JWTMiddleware
 }
 
-func NewAuthHandler(userService *user.Service, jwtAuth *auth.JWTMiddleware) *AuthHandler {
-	return &AuthHandler{
+func NewAuthRoute(userService *user.Handler, jwtAuth *auth.JWTMiddleware) *AuthRoute {
+	return &AuthRoute{
 		userService: userService,
 		jwtAuth:     jwtAuth,
 	}
@@ -51,8 +51,8 @@ type UpdateUserRequest struct {
 }
 
 type ChangePasswordRequest struct {
-	OldPassword string `json:"oldPassword" validate:"required"`
-	NewPassword string `json:"newPassword" validate:"required,min=8"`
+	OldPassword     string `json:"oldPassword" validate:"required"`
+	NewPassword     string `json:"newPassword" validate:"required,min=8"`
 	ConfirmPassword string `json:"confirmPassword" validate:"required,min=8"`
 }
 
@@ -69,7 +69,7 @@ func toPublicUser(u *user.User) *UserPublic {
 	}
 }
 
-func (h *AuthHandler) Register(c *fiber.Ctx) error {
+func (h *AuthRoute) Register(c *fiber.Ctx) error {
 	var req RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -103,7 +103,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHandler) Login(c *fiber.Ctx) error {
+func (h *AuthRoute) Login(c *fiber.Ctx) error {
 	var req LoginRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -131,7 +131,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHandler) Me(c *fiber.Ctx) error {
+func (h *AuthRoute) Me(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -151,7 +151,7 @@ func (h *AuthHandler) Me(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHandler) UpdateUser(c *fiber.Ctx) error {
+func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
 	var req UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -189,7 +189,7 @@ func (h *AuthHandler) UpdateUser(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHandler) ChangePassword(c *fiber.Ctx) error {
+func (h *AuthRoute) ChangePassword(c *fiber.Ctx) error {
 	var req ChangePasswordRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -216,14 +216,14 @@ func (h *AuthHandler) ChangePassword(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHandler) DeleteUser(c *fiber.Ctx) error {
+func (h *AuthRoute) DeleteUser(c *fiber.Ctx) error {
 	var req DeleteUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
-	
+
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -250,7 +250,7 @@ func (h *AuthHandler) DeleteUser(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AuthHandler) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
+func (h *AuthRoute) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
 	router.Post("/register", h.Register)
 	router.Post("/login", h.Login)
 	router.Get("/me", authMiddleware, h.Me)

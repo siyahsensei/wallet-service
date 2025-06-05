@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Service struct {
+type Handler struct {
 	repo        Repository
 	jwtSecret   []byte
 	tokenExpiry time.Duration
@@ -21,15 +21,15 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func NewService(repo Repository, jwtSecret string, tokenExpiry time.Duration) *Service {
-	return &Service{
+func NewHandler(repo Repository, jwtSecret string, tokenExpiry time.Duration) *Handler {
+	return &Handler{
 		repo:        repo,
 		jwtSecret:   []byte(jwtSecret),
 		tokenExpiry: tokenExpiry,
 	}
 }
 
-func (s *Service) RegisterUser(ctx context.Context, email, password, firstName, lastName string) (*User, error) {
+func (s *Handler) RegisterUser(ctx context.Context, email, password, firstName, lastName string) (*User, error) {
 	existingUser, err := s.repo.GetByEmail(ctx, email)
 	if err == nil && existingUser != nil {
 		return nil, errors.New("user with this email already exists")
@@ -44,7 +44,7 @@ func (s *Service) RegisterUser(ctx context.Context, email, password, firstName, 
 	return user, nil
 }
 
-func (s *Service) LoginUser(ctx context.Context, email, password string) (string, error) {
+func (s *Handler) LoginUser(ctx context.Context, email, password string) (string, error) {
 	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		return "", errors.New("invalid credentials")
@@ -71,19 +71,19 @@ func (s *Service) LoginUser(ctx context.Context, email, password string) (string
 	return signedToken, nil
 }
 
-func (s *Service) GetUserByID(ctx context.Context, id uuid.UUID) (*User, error) {
+func (s *Handler) GetUserByID(ctx context.Context, id uuid.UUID) (*User, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *Service) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+func (s *Handler) GetUserByEmail(ctx context.Context, email string) (*User, error) {
 	return s.repo.GetByEmail(ctx, email)
 }
 
-func (s *Service) UpdateUser(ctx context.Context, user *User) error {
+func (s *Handler) UpdateUser(ctx context.Context, user *User) error {
 	return s.repo.Update(ctx, user)
 }
 
-func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
+func (s *Handler) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return err
@@ -97,11 +97,11 @@ func (s *Service) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassw
 	return s.repo.Update(ctx, user)
 }
 
-func (s *Service) DeleteUser(ctx context.Context, userID uuid.UUID) error {
+func (s *Handler) DeleteUser(ctx context.Context, userID uuid.UUID) error {
 	return s.repo.Delete(ctx, userID)
 }
 
-func (s *Service) ValidateUserPassword(ctx context.Context, userID uuid.UUID, password string) error {
+func (s *Handler) ValidateUserPassword(ctx context.Context, userID uuid.UUID, password string) error {
 	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return err
@@ -109,6 +109,6 @@ func (s *Service) ValidateUserPassword(ctx context.Context, userID uuid.UUID, pa
 	return user.ComparePassword(password)
 }
 
-func (s *Service) GetTokenExpiry() time.Duration {
+func (s *Handler) GetTokenExpiry() time.Duration {
 	return s.tokenExpiry
 }

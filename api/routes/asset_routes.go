@@ -1,4 +1,4 @@
-package handlers
+package routes
 
 import (
 	"strconv"
@@ -11,10 +11,10 @@ import (
 )
 
 type AssetHandler struct {
-	assetService *asset.Service
+	assetService *asset.Handler
 }
 
-func NewAssetHandler(assetService *asset.Service) *AssetHandler {
+func NewAssetHandler(assetService *asset.Handler) *AssetHandler {
 	return &AssetHandler{
 		assetService: assetService,
 	}

@@ -20,17 +20,17 @@ type AssetPerformance struct {
 	Currency       string    `json:"currency"`
 }
 
-type Service struct {
+type Handler struct {
 	repo Repository
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{
+func NewHandler(repo Repository) *Handler {
+	return &Handler{
 		repo: repo,
 	}
 }
 
-func (s *Service) HandleCreateAssetCommand(
+func (s *Handler) HandleCreateAssetCommand(
 	ctx context.Context, command CreateAssetCommand) (*Asset, error) {
 	if !isValidAssetType(command.Type) {
 		return nil, errors.New("invalid asset type")
@@ -45,7 +45,7 @@ func (s *Service) HandleCreateAssetCommand(
 	return asset, nil
 }
 
-func (s *Service) HandleUpdateAssetCommand(ctx context.Context, command UpdateAssetCommand) (*Asset, error) {
+func (s *Handler) HandleUpdateAssetCommand(ctx context.Context, command UpdateAssetCommand) (*Asset, error) {
 	if !isValidAssetType(command.Type) {
 		return nil, errors.New("invalid asset type")
 	}
@@ -86,7 +86,7 @@ func (s *Service) HandleUpdateAssetCommand(ctx context.Context, command UpdateAs
 	return existingAsset, nil
 }
 
-func (s *Service) HandleDeleteAssetCommand(ctx context.Context, command DeleteAssetCommand) error {
+func (s *Handler) HandleDeleteAssetCommand(ctx context.Context, command DeleteAssetCommand) error {
 	assetID, err := uuid.Parse(command.ID)
 	if err != nil {
 		return errors.New("invalid asset ID")
@@ -109,7 +109,7 @@ func (s *Service) HandleDeleteAssetCommand(ctx context.Context, command DeleteAs
 	return s.repo.Delete(ctx, assetID)
 }
 
-func (s *Service) HandleGetAssetByIDQuery(ctx context.Context, query GetAssetByIDQuery) (*Asset, error) {
+func (s *Handler) HandleGetAssetByIDQuery(ctx context.Context, query GetAssetByIDQuery) (*Asset, error) {
 	assetID, err := uuid.Parse(query.ID)
 	if err != nil {
 		return nil, errors.New("invalid asset ID")
@@ -132,7 +132,7 @@ func (s *Service) HandleGetAssetByIDQuery(ctx context.Context, query GetAssetByI
 	return asset, nil
 }
 
-func (s *Service) HandleGetUserAssetsQuery(ctx context.Context, query GetUserAssetsQuery) ([]*Asset, error) {
+func (s *Handler) HandleGetUserAssetsQuery(ctx context.Context, query GetUserAssetsQuery) ([]*Asset, error) {
 	userID, err := uuid.Parse(query.UserID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
@@ -141,7 +141,7 @@ func (s *Service) HandleGetUserAssetsQuery(ctx context.Context, query GetUserAss
 	return s.repo.GetByUserID(ctx, userID)
 }
 
-func (s *Service) HandleGetAccountAssetsQuery(ctx context.Context, query GetAccountAssetsQuery) ([]*Asset, error) {
+func (s *Handler) HandleGetAccountAssetsQuery(ctx context.Context, query GetAccountAssetsQuery) ([]*Asset, error) {
 	accountID, err := uuid.Parse(query.AccountID)
 	if err != nil {
 		return nil, errors.New("invalid account ID")
@@ -167,7 +167,7 @@ func (s *Service) HandleGetAccountAssetsQuery(ctx context.Context, query GetAcco
 	return userAssets, nil
 }
 
-func (s *Service) HandleGetAssetsByTypeQuery(ctx context.Context, query GetAssetsByTypeQuery) ([]*Asset, error) {
+func (s *Handler) HandleGetAssetsByTypeQuery(ctx context.Context, query GetAssetsByTypeQuery) ([]*Asset, error) {
 	if !isValidAssetType(query.AssetType) {
 		return nil, errors.New("invalid asset type")
 	}
@@ -180,7 +180,7 @@ func (s *Service) HandleGetAssetsByTypeQuery(ctx context.Context, query GetAsset
 	return s.repo.GetByType(ctx, userID, query.AssetType)
 }
 
-func (s *Service) HandleFilterAssetsQuery(ctx context.Context, query FilterAssetsQuery) ([]*Asset, error) {
+func (s *Handler) HandleFilterAssetsQuery(ctx context.Context, query FilterAssetsQuery) ([]*Asset, error) {
 	userID, err := uuid.Parse(query.UserID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
@@ -208,7 +208,7 @@ func (s *Service) HandleFilterAssetsQuery(ctx context.Context, query FilterAsset
 	return filteredAssets, nil
 }
 
-func (s *Service) HandleGetAssetPerformanceQuery(ctx context.Context, query GetAssetPerformanceQuery) ([]*AssetPerformance, error) {
+func (s *Handler) HandleGetAssetPerformanceQuery(ctx context.Context, query GetAssetPerformanceQuery) ([]*AssetPerformance, error) {
 	userID, err := uuid.Parse(query.UserID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
@@ -217,7 +217,7 @@ func (s *Service) HandleGetAssetPerformanceQuery(ctx context.Context, query GetA
 	return s.repo.GetAssetPerformance(ctx, userID, query.StartDate, query.EndDate)
 }
 
-func (s *Service) HandleGetTotalValueQuery(ctx context.Context, query GetTotalValueQuery) (float64, error) {
+func (s *Handler) HandleGetTotalValueQuery(ctx context.Context, query GetTotalValueQuery) (float64, error) {
 	userID, err := uuid.Parse(query.UserID)
 	if err != nil {
 		return 0, errors.New("invalid user ID")
@@ -226,7 +226,7 @@ func (s *Service) HandleGetTotalValueQuery(ctx context.Context, query GetTotalVa
 	return s.repo.GetTotalValue(ctx, userID, query.AssetTypes)
 }
 
-func (s *Service) matchesFilter(asset *Asset, query FilterAssetsQuery) bool {
+func (s *Handler) matchesFilter(asset *Asset, query FilterAssetsQuery) bool {
 	if query.AccountID != nil {
 		accountID, err := uuid.Parse(*query.AccountID)
 		if err != nil || asset.AccountID != accountID {
@@ -257,24 +257,23 @@ func (s *Service) matchesFilter(asset *Asset, query FilterAssetsQuery) bool {
 	return true
 }
 
-func (s *Service) CreateAsset(
-	ctx context.Context, command CreateAssetCommand) (*Asset, error) {
+func (s *Handler) CreateAsset(ctx context.Context, command CreateAssetCommand) (*Asset, error) {
 	return s.HandleCreateAssetCommand(ctx, command)
 }
 
-func (s *Service) GetAssetByID(ctx context.Context, id uuid.UUID) (*Asset, error) {
+func (s *Handler) GetAssetByID(ctx context.Context, id uuid.UUID) (*Asset, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *Service) GetUserAssets(ctx context.Context, userID uuid.UUID) ([]*Asset, error) {
+func (s *Handler) GetUserAssets(ctx context.Context, userID uuid.UUID) ([]*Asset, error) {
 	return s.repo.GetByUserID(ctx, userID)
 }
 
-func (s *Service) GetAccountAssets(ctx context.Context, accountID uuid.UUID) ([]*Asset, error) {
+func (s *Handler) GetAccountAssets(ctx context.Context, accountID uuid.UUID) ([]*Asset, error) {
 	return s.repo.GetByAccountID(ctx, accountID)
 }
 
-func (s *Service) GetAssetsByType(ctx context.Context, userID uuid.UUID, assetType AssetType) ([]*Asset, error) {
+func (s *Handler) GetAssetsByType(ctx context.Context, userID uuid.UUID, assetType AssetType) ([]*Asset, error) {
 	if !isValidAssetType(assetType) {
 		return nil, errors.New("invalid asset type")
 	}
@@ -282,7 +281,7 @@ func (s *Service) GetAssetsByType(ctx context.Context, userID uuid.UUID, assetTy
 	return s.repo.GetByType(ctx, userID, assetType)
 }
 
-func (s *Service) UpdateAsset(ctx context.Context, asset *Asset) error {
+func (s *Handler) UpdateAsset(ctx context.Context, asset *Asset) error {
 	if !isValidAssetType(asset.Type) {
 		return errors.New("invalid asset type")
 	}
@@ -296,7 +295,7 @@ func (s *Service) UpdateAsset(ctx context.Context, asset *Asset) error {
 	return s.repo.Update(ctx, asset)
 }
 
-func (s *Service) DeleteAsset(ctx context.Context, id uuid.UUID) error {
+func (s *Handler) DeleteAsset(ctx context.Context, id uuid.UUID) error {
 	_, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return errors.New("asset not found")
