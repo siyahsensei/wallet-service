@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"siyahsensei/wallet-service/api/routes"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -16,10 +17,14 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"siyahsensei/wallet-service/configs"
+	"siyahsensei/wallet-service/domain/asset"
+	"siyahsensei/wallet-service/domain/definition"
 	"siyahsensei/wallet-service/domain/user"
 	"siyahsensei/wallet-service/infrastructure/configuration/auth"
 	"siyahsensei/wallet-service/infrastructure/configuration/database"
 	customLogger "siyahsensei/wallet-service/infrastructure/configuration/logger"
+	"siyahsensei/wallet-service/infrastructure/persistence/assetrepo"
+	"siyahsensei/wallet-service/infrastructure/persistence/definitionrepo"
 	"siyahsensei/wallet-service/infrastructure/persistence/userrepo"
 )
 
@@ -54,6 +59,13 @@ func main() {
 
 	userRepo := userrepo.NewPostgresRepository(db)
 	userService := user.NewHandler(userRepo, config.JWTSecret, config.TokenExpiry)
+
+	definitionRepo := definitionrepo.NewPostgresRepository(db)
+	definitionService := definition.NewHandler(definitionRepo)
+
+	assetRepo := assetrepo.NewPostgresRepository(db)
+	assetService := asset.NewHandler(assetRepo)
+
 	jwtMiddleware := auth.NewJWTMiddleware(config.JWTSecret)
 	app := fiber.New(fiber.Config{
 		AppName:               "Wallet API",
@@ -70,8 +82,13 @@ func main() {
 	}))
 
 	authRoute := routes.NewAuthRoute(userService, jwtMiddleware)
+	definitionHandler := routes.NewDefinitionHandler(definitionService)
+	assetHandler := routes.NewAssetHandler(assetService)
+
 	api := app.Group("/api")
 	authRoute.RegisterRoutes(api.Group("/auth"), jwtMiddleware.Middleware())
+	definitionHandler.RegisterRoutes(api)
+	assetHandler.RegisterRoutes(api, jwtMiddleware.Middleware())
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"status": "ok",
