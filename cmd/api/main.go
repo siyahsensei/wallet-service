@@ -24,13 +24,11 @@ import (
 )
 
 func main() {
-	// Load configuration
 	config, err := configs.LoadConfig()
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to load configuration")
 	}
 
-	// Initialize logger
 	customLogger.InitLogger(customLogger.Config{
 		LogLevel: "debug",
 		Pretty:   config.Environment == "development",
@@ -40,8 +38,6 @@ func main() {
 		"environment": config.Environment,
 		"port":        config.ServerPort,
 	})
-
-	// Connect to database
 	db, err := database.NewPostgresDB(database.PostgresConfig{
 		Host:     config.DBHost,
 		Port:     config.DBPort,
@@ -56,22 +52,14 @@ func main() {
 	}
 	defer db.Close()
 
-	// Initialize repositories
 	userRepo := userrepo.NewPostgresRepository(db)
-
-	// Initialize services
 	userService := user.NewService(userRepo, config.JWTSecret, config.TokenExpiry)
-
-	// Initialize JWT authentication middleware
 	jwtMiddleware := auth.NewJWTMiddleware(config.JWTSecret)
-
-	// Initialize Fiber app
 	app := fiber.New(fiber.Config{
 		AppName:               "Wallet API",
 		DisableStartupMessage: true,
 	})
 
-	// Middleware
 	app.Use(recover.New())
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
@@ -81,13 +69,9 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// Initialize API handlers
 	authHandler := handlers.NewAuthHandler(userService, jwtMiddleware)
-	// API routes
 	api := app.Group("/api")
 	authHandler.RegisterRoutes(api.Group("/auth"), jwtMiddleware.Middleware())
-
-	// Add health check route
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{
 			"status": "ok",
@@ -95,7 +79,6 @@ func main() {
 		})
 	})
 
-	// Start server
 	go func() {
 		if err := app.Listen(":" + config.ServerPort); err != nil {
 			customLogger.Fatal("Failed to start server", err)
@@ -103,8 +86,6 @@ func main() {
 	}()
 
 	customLogger.Info(fmt.Sprintf("Server started on port %s", config.ServerPort))
-
-	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
