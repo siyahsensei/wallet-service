@@ -113,7 +113,7 @@ func main() {
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	authRoute := routes.NewAuthRoute(userService, jwtMiddleware)
-	definitionHandler := routes.NewDefinitionHandler(definitionService)
+	definitionHandler := routes.NewDefinitionRoute(definitionService)
 	accountHandler := routes.NewAccountHandler(accountService)
 	assetHandler := routes.NewAssetHandler(assetService)
 

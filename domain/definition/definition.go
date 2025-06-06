@@ -26,3 +26,10 @@ func NewDefinition(command CreateDefinitionCommand) *Definition {
 		UpdatedAt:    now,
 	}
 }
+
+func (d *Definition) Update(command UpdateDefinitionCommand) {
+	d.Name = command.Name
+	d.Abbreviation = command.Abbreviation
+	d.Suffix = command.Suffix
+	d.UpdatedAt = time.Now()
+}

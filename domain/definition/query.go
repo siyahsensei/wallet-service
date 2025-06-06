@@ -14,7 +14,8 @@ type GetDefinitionByAbbreviationQuery struct {
 }
 
 type SearchDefinitionsQuery struct {
-	SearchTerm string `json:"searchTerm" validate:"required"`
-	Limit      int    `json:"limit,omitempty"`
-	Offset     int    `json:"offset,omitempty"`
+	SearchTerm     string `json:"searchTerm" validate:"required"`
+	Limit          int    `json:"limit,omitempty"`
+	Offset         int    `json:"offset,omitempty"`
+	DefinitionType string `json:"definitionType,omitempty"`
 }

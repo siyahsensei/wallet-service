@@ -3,7 +3,6 @@ package definition
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/google/uuid"
 )
@@ -25,13 +24,6 @@ func (h *Handler) HandleCreateDefinitionCommand(ctx context.Context, command Cre
 	if command.Abbreviation == "" {
 		return nil, errors.New("abbreviation is required")
 	}
-
-	// Check if abbreviation already exists
-	existingDef, _ := h.repo.GetByAbbreviation(ctx, command.Abbreviation)
-	if existingDef != nil {
-		return nil, errors.New("abbreviation already exists")
-	}
-
 	definition := NewDefinition(command)
 	if err := h.repo.Create(ctx, definition); err != nil {
 		return nil, err
@@ -46,32 +38,18 @@ func (h *Handler) HandleUpdateDefinitionCommand(ctx context.Context, command Upd
 	if command.Abbreviation == "" {
 		return nil, errors.New("abbreviation is required")
 	}
-
 	definitionID, err := uuid.Parse(command.ID)
 	if err != nil {
 		return nil, errors.New("invalid definition ID")
 	}
-
 	existingDefinition, err := h.repo.GetByID(ctx, definitionID)
 	if err != nil {
 		return nil, errors.New("definition not found")
 	}
-
-	// Check if abbreviation already exists for another definition
-	existingByAbbr, _ := h.repo.GetByAbbreviation(ctx, command.Abbreviation)
-	if existingByAbbr != nil && existingByAbbr.ID != definitionID {
-		return nil, errors.New("abbreviation already exists")
-	}
-
-	existingDefinition.Name = command.Name
-	existingDefinition.Abbreviation = command.Abbreviation
-	existingDefinition.Suffix = command.Suffix
-	existingDefinition.UpdatedAt = time.Now()
-
+	existingDefinition.Update(command)
 	if err := h.repo.Update(ctx, existingDefinition); err != nil {
 		return nil, err
 	}
-
 	return existingDefinition, nil
 }
 
@@ -99,37 +77,24 @@ func (h *Handler) HandleGetDefinitionByIDQuery(ctx context.Context, query GetDef
 }
 
 func (h *Handler) HandleGetAllDefinitionsQuery(ctx context.Context, query GetAllDefinitionsQuery) ([]*Definition, error) {
-	limit := query.Limit
-	if limit <= 0 {
-		limit = 50 // Default limit
-	}
-	if limit > 100 {
-		limit = 100 // Max limit
-	}
-
+	limit := getLimit(query.Limit)
 	return h.repo.GetAll(ctx, limit, query.Offset)
-}
-
-func (h *Handler) HandleGetDefinitionByAbbreviationQuery(ctx context.Context, query GetDefinitionByAbbreviationQuery) (*Definition, error) {
-	if query.Abbreviation == "" {
-		return nil, errors.New("abbreviation is required")
-	}
-
-	return h.repo.GetByAbbreviation(ctx, query.Abbreviation)
 }
 
 func (h *Handler) HandleSearchDefinitionsQuery(ctx context.Context, query SearchDefinitionsQuery) ([]*Definition, error) {
 	if query.SearchTerm == "" {
 		return nil, errors.New("search term is required")
 	}
+	limit := getLimit(query.Limit)
+	return h.repo.Search(ctx, query.SearchTerm, limit, query.Offset, query.DefinitionType)
+}
 
-	limit := query.Limit
+func getLimit(limit int) int {
 	if limit <= 0 {
-		limit = 50 // Default limit
+		limit = 50
 	}
 	if limit > 100 {
-		limit = 100 // Max limit
+		limit = 100
 	}
-
-	return h.repo.Search(ctx, query.SearchTerm, limit, query.Offset)
+	return limit
 }

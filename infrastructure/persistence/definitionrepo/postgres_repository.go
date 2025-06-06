@@ -61,23 +61,6 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*defini
 	return &def, nil
 }
 
-func (r *PostgresRepository) GetByAbbreviation(ctx context.Context, abbreviation string) (*definition.Definition, error) {
-	query := `
-		SELECT id, name, abbreviation, suffix, created_at, updated_at
-		FROM definitions
-		WHERE abbreviation = $1
-	`
-	var def definition.Definition
-	err := r.db.GetContext(ctx, &def, query, abbreviation)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("definition not found")
-		}
-		return nil, err
-	}
-	return &def, nil
-}
-
 func (r *PostgresRepository) GetAll(ctx context.Context, limit, offset int) ([]*definition.Definition, error) {
 	query := `
 		SELECT id, name, abbreviation, suffix, created_at, updated_at
@@ -141,12 +124,12 @@ func (r *PostgresRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r *PostgresRepository) Search(ctx context.Context, searchTerm string, limit, offset int) ([]*definition.Definition, error) {
+func (r *PostgresRepository) Search(ctx context.Context, searchTerm string, limit, offset int, definitionType string) ([]*definition.Definition, error) {
 	searchPattern := "%" + strings.ToLower(searchTerm) + "%"
 	query := `
 		SELECT id, name, abbreviation, suffix, created_at, updated_at
 		FROM definitions
-		WHERE LOWER(name) LIKE $1 OR LOWER(abbreviation) LIKE $1
+		WHERE LOWER(name) LIKE $1 OR LOWER(abbreviation) LIKE $1 AND type = $2
 		ORDER BY 
 			CASE 
 				WHEN LOWER(abbreviation) = LOWER($2) THEN 1
@@ -159,7 +142,7 @@ func (r *PostgresRepository) Search(ctx context.Context, searchTerm string, limi
 		LIMIT $3 OFFSET $4
 	`
 	var definitions []*definition.Definition
-	err := r.db.SelectContext(ctx, &definitions, query, searchPattern, searchTerm, limit, offset)
+	err := r.db.SelectContext(ctx, &definitions, query, searchPattern, definitionType, limit, offset)
 	if err != nil {
 		return nil, err
 	}
