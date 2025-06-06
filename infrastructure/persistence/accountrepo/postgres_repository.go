@@ -27,9 +27,9 @@ func NewPostgresRepository(db *sqlx.DB) *PostgresRepository {
 func (r *PostgresRepository) Create(ctx context.Context, a *account.Account) error {
 	query := `
 		INSERT INTO accounts (
-			id, user_id, name, account_type, balance, currency_code, created_at, updated_at
+			id, user_id, name, account_type, created_at, updated_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8
+			$1, $2, $3, $4, $5, $6
 		)
 	`
 	_, err := r.db.ExecContext(
@@ -39,8 +39,6 @@ func (r *PostgresRepository) Create(ctx context.Context, a *account.Account) err
 		a.UserID,
 		a.Name,
 		a.AccountType,
-		a.Balance,
-		a.CurrencyCode,
 		a.CreatedAt,
 		a.UpdatedAt,
 	)
@@ -49,7 +47,7 @@ func (r *PostgresRepository) Create(ctx context.Context, a *account.Account) err
 
 func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
 	query := `
-		SELECT id, user_id, name, account_type, balance, currency_code, created_at, updated_at
+		SELECT id, user_id, name, account_type, created_at, updated_at
 		FROM accounts
 		WHERE id = $1
 	`
@@ -64,9 +62,81 @@ func (r *PostgresRepository) GetByID(ctx context.Context, id uuid.UUID) (*accoun
 	return &a, nil
 }
 
+func (r *PostgresRepository) GetByIDWithAssets(ctx context.Context, id uuid.UUID, userID uuid.UUID) (*account.AccountWithAssets, error) {
+	// First get the account
+	acc, err := r.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if account belongs to user
+	if acc.UserID != userID {
+		return nil, errors.New("unauthorized: account does not belong to user")
+	}
+
+	// Get assets for this account with definition details
+	assetsQuery := `
+		SELECT 
+			a.id, a.definition_id, a.asset_type, a.quantity, a.updated_at,
+			d.name, d.abbreviation, d.suffix
+		FROM assets a
+		JOIN definitions d ON a.definition_id = d.id
+		WHERE a.account_id = $1
+		ORDER BY a.updated_at DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, assetsQuery, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var assets []account.AssetInfo
+	totalBalances := make(map[string]float64)
+	assetCounts := make(map[string]int)
+	var lastUpdated *time.Time
+
+	for rows.Next() {
+		var asset account.AssetInfo
+		var suffix sql.NullString
+
+		err := rows.Scan(
+			&asset.ID, &asset.DefinitionID, &asset.Type, &asset.Quantity, &asset.UpdatedAt,
+			&asset.Name, &asset.Symbol, &suffix,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if suffix.Valid {
+			asset.Currency = suffix.String
+		} else {
+			asset.Currency = asset.Symbol // fallback to symbol if no suffix
+		}
+
+		assets = append(assets, asset)
+
+		// Calculate totals (simplified - in real app you'd need current prices)
+		totalBalances[asset.Currency] += asset.Quantity
+		assetCounts[asset.Type]++
+
+		if lastUpdated == nil || asset.UpdatedAt.After(*lastUpdated) {
+			lastUpdated = &asset.UpdatedAt
+		}
+	}
+
+	return &account.AccountWithAssets{
+		Account:       *acc,
+		Assets:        assets,
+		TotalBalances: totalBalances,
+		AssetCounts:   assetCounts,
+		LastUpdated:   lastUpdated,
+	}, nil
+}
+
 func (r *PostgresRepository) GetByUserID(ctx context.Context, userID uuid.UUID) ([]*account.Account, error) {
 	query := `
-		SELECT id, user_id, name, account_type, balance, currency_code, created_at, updated_at
+		SELECT id, user_id, name, account_type, created_at, updated_at
 		FROM accounts
 		WHERE user_id = $1
 		ORDER BY created_at DESC
@@ -79,9 +149,27 @@ func (r *PostgresRepository) GetByUserID(ctx context.Context, userID uuid.UUID) 
 	return accounts, nil
 }
 
+func (r *PostgresRepository) GetByUserIDWithAssets(ctx context.Context, userID uuid.UUID) ([]*account.AccountWithAssets, error) {
+	accounts, err := r.GetByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var accountsWithAssets []*account.AccountWithAssets
+	for _, acc := range accounts {
+		accWithAssets, err := r.GetByIDWithAssets(ctx, acc.ID, userID)
+		if err != nil {
+			return nil, err
+		}
+		accountsWithAssets = append(accountsWithAssets, accWithAssets)
+	}
+
+	return accountsWithAssets, nil
+}
+
 func (r *PostgresRepository) GetByType(ctx context.Context, userID uuid.UUID, accountType account.AccountType) ([]*account.Account, error) {
 	query := `
-		SELECT id, user_id, name, account_type, balance, currency_code, created_at, updated_at
+		SELECT id, user_id, name, account_type, created_at, updated_at
 		FROM accounts
 		WHERE user_id = $1 AND account_type = $2
 		ORDER BY created_at DESC
@@ -113,16 +201,14 @@ func (r *PostgresRepository) Update(ctx context.Context, a *account.Account) err
 	a.UpdatedAt = time.Now()
 	query := `
 		UPDATE accounts
-		SET name = $1, account_type = $2, balance = $3, currency_code = $4, updated_at = $5
-		WHERE id = $6
+		SET name = $1, account_type = $2, updated_at = $3
+		WHERE id = $4
 	`
 	result, err := r.db.ExecContext(
 		ctx,
 		query,
 		a.Name,
 		a.AccountType,
-		a.Balance,
-		a.CurrencyCode,
 		a.UpdatedAt,
 		a.ID,
 	)
@@ -179,15 +265,14 @@ func (r *PostgresRepository) UpdateBalance(ctx context.Context, id uuid.UUID, ba
 }
 
 func (r *PostgresRepository) GetAccountSummary(ctx context.Context, userID uuid.UUID) (*account.AccountSummary, error) {
-	// Get total accounts and balance
+	// Get total accounts
 	totalQuery := `
-		SELECT COUNT(*) as total_accounts, COALESCE(SUM(balance), 0) as total_balance
+		SELECT COUNT(*) as total_accounts
 		FROM accounts
 		WHERE user_id = $1
 	`
 	var totalAccounts int
-	var totalBalance float64
-	err := r.db.QueryRowContext(ctx, totalQuery, userID).Scan(&totalAccounts, &totalBalance)
+	err := r.db.QueryRowContext(ctx, totalQuery, userID).Scan(&totalAccounts)
 	if err != nil {
 		return nil, err
 	}
@@ -199,28 +284,31 @@ func (r *PostgresRepository) GetAccountSummary(ctx context.Context, userID uuid.
 		WHERE user_id = $1
 		GROUP BY account_type
 	`
-	typeRows, err := r.db.QueryContext(ctx, typeQuery, userID)
+	rows, err := r.db.QueryContext(ctx, typeQuery, userID)
 	if err != nil {
 		return nil, err
 	}
-	defer typeRows.Close()
+	defer rows.Close()
 
 	byType := make(map[account.AccountType]int)
-	for typeRows.Next() {
+	for rows.Next() {
 		var accountType account.AccountType
 		var count int
-		if err := typeRows.Scan(&accountType, &count); err != nil {
+		err := rows.Scan(&accountType, &count)
+		if err != nil {
 			return nil, err
 		}
 		byType[accountType] = count
 	}
 
-	// Get balance by currency
+	// Get currency totals from assets
 	currencyQuery := `
-		SELECT currency_code, SUM(balance) as total_balance
-		FROM accounts
-		WHERE user_id = $1
-		GROUP BY currency_code
+		SELECT d.suffix, SUM(a.quantity) as total
+		FROM assets a
+		JOIN definitions d ON a.definition_id = d.id
+		JOIN accounts acc ON a.account_id = acc.id
+		WHERE acc.user_id = $1 AND d.suffix IS NOT NULL
+		GROUP BY d.suffix
 	`
 	currencyRows, err := r.db.QueryContext(ctx, currencyQuery, userID)
 	if err != nil {
@@ -230,17 +318,17 @@ func (r *PostgresRepository) GetAccountSummary(ctx context.Context, userID uuid.
 
 	byCurrency := make(map[string]float64)
 	for currencyRows.Next() {
-		var currencyCode string
-		var balance float64
-		if err := currencyRows.Scan(&currencyCode, &balance); err != nil {
+		var currency string
+		var total float64
+		err := currencyRows.Scan(&currency, &total)
+		if err != nil {
 			return nil, err
 		}
-		byCurrency[currencyCode] = balance
+		byCurrency[currency] = total
 	}
 
 	return &account.AccountSummary{
 		TotalAccounts: totalAccounts,
-		TotalBalance:  totalBalance,
 		ByType:        byType,
 		ByCurrency:    byCurrency,
 	}, nil
@@ -248,7 +336,7 @@ func (r *PostgresRepository) GetAccountSummary(ctx context.Context, userID uuid.
 
 func (r *PostgresRepository) Filter(ctx context.Context, query account.FilterAccountsQuery) ([]*account.Account, error) {
 	baseQuery := `
-		SELECT id, user_id, name, account_type, balance, currency_code, created_at, updated_at
+		SELECT id, user_id, name, account_type, created_at, updated_at
 		FROM accounts
 		WHERE user_id = $1
 	`
@@ -261,24 +349,6 @@ func (r *PostgresRepository) Filter(ctx context.Context, query account.FilterAcc
 	if query.AccountType != nil {
 		conditions = append(conditions, fmt.Sprintf("account_type = $%d", argIndex))
 		args = append(args, *query.AccountType)
-		argIndex++
-	}
-
-	if query.CurrencyCode != nil {
-		conditions = append(conditions, fmt.Sprintf("currency_code = $%d", argIndex))
-		args = append(args, *query.CurrencyCode)
-		argIndex++
-	}
-
-	if query.MinBalance != nil {
-		conditions = append(conditions, fmt.Sprintf("balance >= $%d", argIndex))
-		args = append(args, *query.MinBalance)
-		argIndex++
-	}
-
-	if query.MaxBalance != nil {
-		conditions = append(conditions, fmt.Sprintf("balance <= $%d", argIndex))
-		args = append(args, *query.MaxBalance)
 		argIndex++
 	}
 
@@ -304,5 +374,6 @@ func (r *PostgresRepository) Filter(ctx context.Context, query account.FilterAcc
 	if err != nil {
 		return nil, err
 	}
+
 	return accounts, nil
 }

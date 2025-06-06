@@ -1,4 +1,4 @@
-.PHONY: build test run migrate-up migrate-down swagger
+.PHONY: build test run migrate-up migrate-down swagger migrate-new-structure
 
 # Build the application
 build:
@@ -26,4 +26,8 @@ migrate-up:
 
 # Run migrations down
 migrate-down:
-	migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/wallety?sslmode=disable" down 
+	migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/wallety?sslmode=disable" down
+
+# Apply the new account structure migration
+migrate-new-structure:
+	migrate -path migrations -database "postgres://postgres:postgres@localhost:5432/wallety?sslmode=disable" up 1 

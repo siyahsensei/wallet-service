@@ -14,19 +14,11 @@ type GetAccountsByTypeQuery struct {
 	AccountType AccountType `json:"accountType" validate:"required"`
 }
 
-type GetAccountsByCurrencyQuery struct {
-	UserID       string `json:"userId" validate:"required"`
-	CurrencyCode string `json:"currencyCode" validate:"required"`
-}
-
 type FilterAccountsQuery struct {
-	UserID       string       `json:"userId" validate:"required"`
-	AccountType  *AccountType `json:"accountType,omitempty"`
-	CurrencyCode *string      `json:"currencyCode,omitempty"`
-	MinBalance   *float64     `json:"minBalance,omitempty"`
-	MaxBalance   *float64     `json:"maxBalance,omitempty"`
-	Limit        int          `json:"limit,omitempty"`
-	Offset       int          `json:"offset,omitempty"`
+	UserID      string       `json:"userId" validate:"required"`
+	AccountType *AccountType `json:"accountType,omitempty"`
+	Limit       int          `json:"limit,omitempty"`
+	Offset      int          `json:"offset,omitempty"`
 }
 
 type GetAccountSummaryQuery struct {

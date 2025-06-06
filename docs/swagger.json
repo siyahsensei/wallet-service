@@ -157,6 +157,43 @@
                 }
             }
         },
+        "/accounts/with-assets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all accounts with their assets for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get all user accounts with assets",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/routes.AccountsWithAssetsListResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/accounts/{id}": {
             "get": {
                 "security": [
@@ -312,6 +349,64 @@
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/accounts/{id}/with-assets": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a specific account by ID with its assets for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get account by ID with assets",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/routes.AccountWithAssetsResponse"
                             }
                         }
                     },
@@ -942,13 +1037,7 @@
                 "accountType": {
                     "type": "string"
                 },
-                "balance": {
-                    "type": "number"
-                },
                 "createdAt": {
-                    "type": "string"
-                },
-                "currencyCode": {
                     "type": "string"
                 },
                 "id": {
@@ -982,9 +1071,50 @@
                 },
                 "totalAccounts": {
                     "type": "integer"
+                }
+            }
+        },
+        "routes.AccountWithAssetsResponse": {
+            "type": "object",
+            "properties": {
+                "accountType": {
+                    "type": "string"
                 },
-                "totalBalance": {
-                    "type": "number"
+                "assetCounts": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/routes.AssetInfoResponse"
+                    }
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastUpdated": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "totalBalances": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
                 }
             }
         },
@@ -999,6 +1129,49 @@
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "routes.AccountsWithAssetsListResponse": {
+            "type": "object",
+            "properties": {
+                "accounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/routes.AccountWithAssetsResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "routes.AssetInfoResponse": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "definitionId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "symbol": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -1062,18 +1235,11 @@
             "type": "object",
             "required": [
                 "accountType",
-                "currencyCode",
                 "name"
             ],
             "properties": {
                 "accountType": {
                     "$ref": "#/definitions/account.AccountType"
-                },
-                "balance": {
-                    "type": "number"
-                },
-                "currencyCode": {
-                    "type": "string"
                 },
                 "name": {
                     "type": "string"
@@ -1191,18 +1357,11 @@
             "type": "object",
             "required": [
                 "accountType",
-                "currencyCode",
                 "name"
             ],
             "properties": {
                 "accountType": {
                     "$ref": "#/definitions/account.AccountType"
-                },
-                "balance": {
-                    "type": "number"
-                },
-                "currencyCode": {
-                    "type": "string"
                 },
                 "name": {
                     "type": "string"

@@ -20,34 +20,48 @@ func NewAccountHandler(accountService *account.Handler) *AccountHandler {
 	}
 }
 
-// Request models (without UserID for security)
+// Request models (without Balance and CurrencyCode)
 type CreateAccountRequest struct {
-	Name         string              `json:"name" validate:"required"`
-	AccountType  account.AccountType `json:"accountType" validate:"required"`
-	Balance      float64             `json:"balance"`
-	CurrencyCode string              `json:"currencyCode" validate:"required"`
+	Name        string              `json:"name" validate:"required"`
+	AccountType account.AccountType `json:"accountType" validate:"required"`
 }
 
 type UpdateAccountRequest struct {
-	Name         string              `json:"name" validate:"required"`
-	AccountType  account.AccountType `json:"accountType" validate:"required"`
-	Balance      float64             `json:"balance"`
-	CurrencyCode string              `json:"currencyCode" validate:"required"`
-}
-
-type UpdateBalanceRequest struct {
-	Amount float64 `json:"amount" validate:"required"`
+	Name        string              `json:"name" validate:"required"`
+	AccountType account.AccountType `json:"accountType" validate:"required"`
 }
 
 // Response models
 type AccountResponse struct {
+	ID          string    `json:"id"`
+	UserID      string    `json:"userId"`
+	Name        string    `json:"name"`
+	AccountType string    `json:"accountType"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
+type AccountWithAssetsResponse struct {
+	ID            string              `json:"id"`
+	UserID        string              `json:"userId"`
+	Name          string              `json:"name"`
+	AccountType   string              `json:"accountType"`
+	CreatedAt     time.Time           `json:"createdAt"`
+	UpdatedAt     time.Time           `json:"updatedAt"`
+	Assets        []AssetInfoResponse `json:"assets"`
+	TotalBalances map[string]float64  `json:"totalBalances"`
+	AssetCounts   map[string]int      `json:"assetCounts"`
+	LastUpdated   *time.Time          `json:"lastUpdated"`
+}
+
+type AssetInfoResponse struct {
 	ID           string    `json:"id"`
-	UserID       string    `json:"userId"`
+	DefinitionID string    `json:"definitionId"`
+	Type         string    `json:"type"`
+	Quantity     float64   `json:"quantity"`
+	Symbol       string    `json:"symbol"`
 	Name         string    `json:"name"`
-	AccountType  string    `json:"accountType"`
-	Balance      float64   `json:"balance"`
-	CurrencyCode string    `json:"currencyCode"`
-	CreatedAt    time.Time `json:"createdAt"`
+	Currency     string    `json:"currency"`
 	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
@@ -56,30 +70,60 @@ type AccountsListResponse struct {
 	Total    int               `json:"total"`
 }
 
+type AccountsWithAssetsListResponse struct {
+	Accounts []AccountWithAssetsResponse `json:"accounts"`
+	Total    int                         `json:"total"`
+}
+
 type AccountSummaryResponse struct {
 	TotalAccounts int                         `json:"totalAccounts"`
-	TotalBalance  float64                     `json:"totalBalance"`
 	ByType        map[account.AccountType]int `json:"byType"`
 	ByCurrency    map[string]float64          `json:"byCurrency"`
 }
 
 func toAccountResponse(a *account.Account) AccountResponse {
 	return AccountResponse{
-		ID:           a.ID.String(),
-		UserID:       a.UserID.String(),
-		Name:         a.Name,
-		AccountType:  string(a.AccountType),
-		Balance:      a.Balance,
-		CurrencyCode: a.CurrencyCode,
-		CreatedAt:    a.CreatedAt,
-		UpdatedAt:    a.UpdatedAt,
+		ID:          a.ID.String(),
+		UserID:      a.UserID.String(),
+		Name:        a.Name,
+		AccountType: string(a.AccountType),
+		CreatedAt:   a.CreatedAt,
+		UpdatedAt:   a.UpdatedAt,
+	}
+}
+
+func toAccountWithAssetsResponse(a *account.AccountWithAssets) AccountWithAssetsResponse {
+	var assets []AssetInfoResponse
+	for _, asset := range a.Assets {
+		assets = append(assets, AssetInfoResponse{
+			ID:           asset.ID.String(),
+			DefinitionID: asset.DefinitionID.String(),
+			Type:         asset.Type,
+			Quantity:     asset.Quantity,
+			Symbol:       asset.Symbol,
+			Name:         asset.Name,
+			Currency:     asset.Currency,
+			UpdatedAt:    asset.UpdatedAt,
+		})
+	}
+
+	return AccountWithAssetsResponse{
+		ID:            a.Account.ID.String(),
+		UserID:        a.Account.UserID.String(),
+		Name:          a.Account.Name,
+		AccountType:   string(a.Account.AccountType),
+		CreatedAt:     a.Account.CreatedAt,
+		UpdatedAt:     a.Account.UpdatedAt,
+		Assets:        assets,
+		TotalBalances: a.TotalBalances,
+		AssetCounts:   a.AssetCounts,
+		LastUpdated:   a.LastUpdated,
 	}
 }
 
 func toAccountSummaryResponse(s *account.AccountSummary) AccountSummaryResponse {
 	return AccountSummaryResponse{
 		TotalAccounts: s.TotalAccounts,
-		TotalBalance:  s.TotalBalance,
 		ByType:        s.ByType,
 		ByCurrency:    s.ByCurrency,
 	}
@@ -114,11 +158,9 @@ func (h *AccountHandler) CreateAccount(c *fiber.Ctx) error {
 
 	// Map request to command with UserID from JWT token
 	command := account.CreateAccountCommand{
-		UserID:       userIDValue.String(),
-		Name:         req.Name,
-		AccountType:  req.AccountType,
-		Balance:      req.Balance,
-		CurrencyCode: req.CurrencyCode,
+		UserID:      userIDValue.String(),
+		Name:        req.Name,
+		AccountType: req.AccountType,
 	}
 
 	createdAccount, err := h.accountService.HandleCreateAccountCommand(c.Context(), command)
@@ -169,12 +211,10 @@ func (h *AccountHandler) UpdateAccount(c *fiber.Ctx) error {
 	}
 
 	command := account.UpdateAccountCommand{
-		ID:           accountID,
-		UserID:       userIDValue.String(),
-		Name:         req.Name,
-		AccountType:  req.AccountType,
-		Balance:      req.Balance,
-		CurrencyCode: req.CurrencyCode,
+		ID:          accountID,
+		UserID:      userIDValue.String(),
+		Name:        req.Name,
+		AccountType: req.AccountType,
 	}
 
 	updatedAccount, err := h.accountService.HandleUpdateAccountCommand(c.Context(), command)
@@ -265,15 +305,59 @@ func (h *AccountHandler) GetAccountByID(c *fiber.Ctx) error {
 		UserID: userIDValue.String(),
 	}
 
-	acc, err := h.accountService.HandleGetAccountByIDQuery(c.Context(), query)
+	foundAccount, err := h.accountService.HandleGetAccountByIDQuery(c.Context(), query)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"account": toAccountResponse(acc),
+		"account": toAccountResponse(foundAccount),
+	})
+}
+
+// GetAccountByIDWithAssets godoc
+// @Summary Get account by ID with assets
+// @Description Get a specific account by ID with its assets for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Account ID"
+// @Success 200 {object} map[string]AccountWithAssetsResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /accounts/{id}/with-assets [get]
+func (h *AccountHandler) GetAccountByIDWithAssets(c *fiber.Ctx) error {
+	userIDValue, ok := c.Locals("userID").(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	accountID := c.Params("id")
+	if accountID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Account ID is required",
+		})
+	}
+
+	query := account.GetAccountByIDQuery{
+		ID:     accountID,
+		UserID: userIDValue.String(),
+	}
+
+	foundAccount, err := h.accountService.HandleGetAccountByIDWithAssetsQuery(c.Context(), query)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"account": toAccountWithAssetsResponse(foundAccount),
 	})
 }
 
@@ -317,6 +401,46 @@ func (h *AccountHandler) GetUserAccounts(c *fiber.Ctx) error {
 	})
 }
 
+// GetUserAccountsWithAssets godoc
+// @Summary Get all user accounts with assets
+// @Description Get all accounts with their assets for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} AccountsWithAssetsListResponse
+// @Failure 401 {object} map[string]string
+// @Router /accounts/with-assets [get]
+func (h *AccountHandler) GetUserAccountsWithAssets(c *fiber.Ctx) error {
+	userIDValue, ok := c.Locals("userID").(uuid.UUID)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Unauthorized",
+		})
+	}
+
+	query := account.GetUserAccountsQuery{
+		UserID: userIDValue.String(),
+	}
+
+	accounts, err := h.accountService.HandleGetUserAccountsWithAssetsQuery(c.Context(), query)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	var accountResponses []AccountWithAssetsResponse
+	for _, a := range accounts {
+		accountResponses = append(accountResponses, toAccountWithAssetsResponse(a))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(AccountsWithAssetsListResponse{
+		Accounts: accountResponses,
+		Total:    len(accountResponses),
+	})
+}
+
 func (h *AccountHandler) GetAccountsByType(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -355,44 +479,6 @@ func (h *AccountHandler) GetAccountsByType(c *fiber.Ctx) error {
 	})
 }
 
-func (h *AccountHandler) GetAccountsByCurrency(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	currencyCode := c.Params("currency")
-	if currencyCode == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Currency code is required",
-		})
-	}
-
-	query := account.GetAccountsByCurrencyQuery{
-		UserID:       userIDValue.String(),
-		CurrencyCode: currencyCode,
-	}
-
-	accounts, err := h.accountService.HandleGetAccountsByCurrencyQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	var accountResponses []AccountResponse
-	for _, a := range accounts {
-		accountResponses = append(accountResponses, toAccountResponse(a))
-	}
-
-	return c.Status(fiber.StatusOK).JSON(AccountsListResponse{
-		Accounts: accountResponses,
-		Total:    len(accountResponses),
-	})
-}
-
 func (h *AccountHandler) FilterAccounts(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -408,22 +494,6 @@ func (h *AccountHandler) FilterAccounts(c *fiber.Ctx) error {
 	if accountType := c.Query("accountType"); accountType != "" {
 		at := account.AccountType(accountType)
 		query.AccountType = &at
-	}
-
-	if currencyCode := c.Query("currencyCode"); currencyCode != "" {
-		query.CurrencyCode = &currencyCode
-	}
-
-	if minBalance := c.Query("minBalance"); minBalance != "" {
-		if val, err := strconv.ParseFloat(minBalance, 64); err == nil {
-			query.MinBalance = &val
-		}
-	}
-
-	if maxBalance := c.Query("maxBalance"); maxBalance != "" {
-		if val, err := strconv.ParseFloat(maxBalance, 64); err == nil {
-			query.MaxBalance = &val
-		}
 	}
 
 	if limit := c.Query("limit"); limit != "" {
@@ -453,46 +523,6 @@ func (h *AccountHandler) FilterAccounts(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(AccountsListResponse{
 		Accounts: accountResponses,
 		Total:    len(accountResponses),
-	})
-}
-
-func (h *AccountHandler) UpdateAccountBalance(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	accountID := c.Params("id")
-	if accountID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Account ID is required",
-		})
-	}
-
-	var req UpdateBalanceRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid request body",
-		})
-	}
-
-	command := account.UpdateAccountBalanceCommand{
-		ID:     accountID,
-		UserID: userIDValue.String(),
-		Amount: req.Amount,
-	}
-
-	updatedAccount, err := h.accountService.HandleUpdateAccountBalanceCommand(c.Context(), command)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"account": toAccountResponse(updatedAccount),
 	})
 }
 
@@ -537,10 +567,10 @@ func (h *AccountHandler) RegisterRoutes(router fiber.Router, authMiddleware fibe
 	accountGroup.Put("/:id", h.UpdateAccount)
 	accountGroup.Delete("/:id", h.DeleteAccount)
 	accountGroup.Get("/", h.GetUserAccounts)
+	accountGroup.Get("/with-assets", h.GetUserAccountsWithAssets)
 	accountGroup.Get("/filter", h.FilterAccounts)
 	accountGroup.Get("/summary", h.GetAccountSummary)
 	accountGroup.Get("/type/:type", h.GetAccountsByType)
-	accountGroup.Get("/currency/:currency", h.GetAccountsByCurrency)
-	accountGroup.Put("/:id/balance", h.UpdateAccountBalance)
 	accountGroup.Get("/:id", h.GetAccountByID)
+	accountGroup.Get("/:id/with-assets", h.GetAccountByIDWithAssets)
 }

@@ -91,4 +91,6 @@ cp .env.example .env
 make run-api
 # or directly:
 go run cmd/api/main.go
+# or use the convenient script:
+./start-with-swagger.sh
 ```

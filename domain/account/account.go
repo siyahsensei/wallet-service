@@ -25,26 +25,43 @@ const (
 )
 
 type Account struct {
-	ID           uuid.UUID   `json:"id" db:"id"`
-	UserID       uuid.UUID   `json:"userId" db:"user_id"`
-	Name         string      `json:"name" db:"name"`
-	AccountType  AccountType `json:"accountType" db:"account_type"`
-	Balance      float64     `json:"balance" db:"balance"`
-	CurrencyCode string      `json:"currencyCode" db:"currency_code"`
-	CreatedAt    time.Time   `json:"createdAt" db:"created_at"`
-	UpdatedAt    time.Time   `json:"updatedAt" db:"updated_at"`
+	ID          uuid.UUID   `json:"id" db:"id"`
+	UserID      uuid.UUID   `json:"userId" db:"user_id"`
+	Name        string      `json:"name" db:"name"`
+	AccountType AccountType `json:"accountType" db:"account_type"`
+	CreatedAt   time.Time   `json:"createdAt" db:"created_at"`
+	UpdatedAt   time.Time   `json:"updatedAt" db:"updated_at"`
+}
+
+// AccountWithAssets represents an account with its associated assets and calculated balances
+type AccountWithAssets struct {
+	Account
+	Assets        []AssetInfo        `json:"assets"`
+	TotalBalances map[string]float64 `json:"totalBalances"` // currency -> total balance
+	AssetCounts   map[string]int     `json:"assetCounts"`   // asset type -> count
+	LastUpdated   *time.Time         `json:"lastUpdated"`   // last asset update time
+}
+
+// AssetInfo represents basic asset information for account response
+type AssetInfo struct {
+	ID           uuid.UUID `json:"id"`
+	DefinitionID uuid.UUID `json:"definitionId"`
+	Type         string    `json:"type"`
+	Quantity     float64   `json:"quantity"`
+	Symbol       string    `json:"symbol"`
+	Name         string    `json:"name"`
+	Currency     string    `json:"currency"`
+	UpdatedAt    time.Time `json:"updatedAt"`
 }
 
 func NewAccount(command CreateAccountCommand) *Account {
 	now := time.Now()
 	return &Account{
-		ID:           uuid.New(),
-		UserID:       uuid.MustParse(command.UserID),
-		Name:         command.Name,
-		AccountType:  command.AccountType,
-		Balance:      command.Balance,
-		CurrencyCode: command.CurrencyCode,
-		CreatedAt:    now,
-		UpdatedAt:    now,
+		ID:          uuid.New(),
+		UserID:      uuid.MustParse(command.UserID),
+		Name:        command.Name,
+		AccountType: command.AccountType,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 }
