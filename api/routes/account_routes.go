@@ -441,6 +441,18 @@ func (h *AccountHandler) GetUserAccountsWithAssets(c *fiber.Ctx) error {
 	})
 }
 
+// GetAccountsByType godoc
+// @Summary Get accounts by type
+// @Description Get all accounts of a specific type for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param type path string true "Account Type"
+// @Success 200 {object} AccountsListResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /accounts/type/{type} [get]
 func (h *AccountHandler) GetAccountsByType(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -479,6 +491,19 @@ func (h *AccountHandler) GetAccountsByType(c *fiber.Ctx) error {
 	})
 }
 
+// FilterAccounts godoc
+// @Summary Filter accounts
+// @Description Filter accounts with optional parameters for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param accountType query string false "Account Type"
+// @Param limit query int false "Limit number of results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} AccountsListResponse
+// @Failure 401 {object} map[string]string
+// @Router /accounts/filter [get]
 func (h *AccountHandler) FilterAccounts(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {

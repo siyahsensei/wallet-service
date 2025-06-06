@@ -181,6 +181,15 @@ definitions:
       userId:
         type: string
     type: object
+  routes.AssetsListResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/routes.AssetResponse'
+        type: array
+      total:
+        type: integer
+    type: object
   routes.ChangePasswordRequest:
     properties:
       confirmPassword:
@@ -277,6 +286,11 @@ definitions:
       user:
         $ref: '#/definitions/routes.UserPublic'
     type: object
+  routes.TotalValueResponse:
+    properties:
+      totalValue:
+        type: number
+    type: object
   routes.UpdateAccountRequest:
     properties:
       accountType:
@@ -307,6 +321,18 @@ definitions:
     - purchaseDate
     - quantity
     - type
+    type: object
+  routes.UpdateDefinitionRequest:
+    properties:
+      abbreviation:
+        type: string
+      name:
+        type: string
+      suffix:
+        type: string
+    required:
+    - abbreviation
+    - name
     type: object
   routes.UpdateUserRequest:
     properties:
@@ -587,6 +613,43 @@ paths:
       summary: Get account by ID with assets
       tags:
       - accounts
+  /accounts/filter:
+    get:
+      consumes:
+      - application/json
+      description: Filter accounts with optional parameters for the authenticated
+        user
+      parameters:
+      - description: Account Type
+        in: query
+        name: accountType
+        type: string
+      - description: Limit number of results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.AccountsListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Filter accounts
+      tags:
+      - accounts
   /accounts/summary:
     get:
       consumes:
@@ -610,6 +673,41 @@ paths:
       security:
       - BearerAuth: []
       summary: Get account summary
+      tags:
+      - accounts
+  /accounts/type/{type}:
+    get:
+      consumes:
+      - application/json
+      description: Get all accounts of a specific type for the authenticated user
+      parameters:
+      - description: Account Type
+        in: path
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.AccountsListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get accounts by type
       tags:
       - accounts
   /accounts/with-assets:
@@ -636,6 +734,28 @@ paths:
       tags:
       - accounts
   /assets:
+    get:
+      consumes:
+      - application/json
+      description: Get all assets for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.AssetsListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all user assets
+      tags:
+      - assets
     post:
       consumes:
       - application/json
@@ -674,6 +794,86 @@ paths:
       tags:
       - assets
   /assets/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing asset for the authenticated user
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an asset
+      tags:
+      - assets
+    get:
+      consumes:
+      - application/json
+      description: Get a specific asset by ID for the authenticated user
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.AssetResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get asset by ID
+      tags:
+      - assets
     put:
       consumes:
       - application/json
@@ -720,6 +920,202 @@ paths:
       security:
       - BearerAuth: []
       summary: Update an asset
+      tags:
+      - assets
+  /assets/account/{accountId}:
+    get:
+      consumes:
+      - application/json
+      description: Get all assets for a specific account of the authenticated user
+      parameters:
+      - description: Account ID
+        in: path
+        name: accountId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.AssetsListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get assets by account
+      tags:
+      - assets
+  /assets/filter:
+    get:
+      consumes:
+      - application/json
+      description: Filter assets with optional parameters for the authenticated user
+      parameters:
+      - description: Account ID
+        in: query
+        name: accountId
+        type: string
+      - description: Asset Type
+        in: query
+        name: assetType
+        type: string
+      - description: Minimum Quantity
+        in: query
+        name: minQuantity
+        type: number
+      - description: Maximum Quantity
+        in: query
+        name: maxQuantity
+        type: number
+      - description: Created From Date (RFC3339)
+        in: query
+        name: createdFrom
+        type: string
+      - description: Created To Date (RFC3339)
+        in: query
+        name: createdTo
+        type: string
+      - description: Limit number of results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.AssetsListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Filter assets
+      tags:
+      - assets
+  /assets/performance:
+    get:
+      consumes:
+      - application/json
+      description: Get performance data for assets within a date range for the authenticated
+        user
+      parameters:
+      - description: Start Date (RFC3339)
+        in: query
+        name: startDate
+        required: true
+        type: string
+      - description: End Date (RFC3339)
+        in: query
+        name: endDate
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get asset performance
+      tags:
+      - assets
+  /assets/total-value:
+    get:
+      consumes:
+      - application/json
+      description: Get total value of assets for the authenticated user
+      parameters:
+      - description: Asset Types (comma separated)
+        in: query
+        name: assetTypes
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.TotalValueResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get total asset value
+      tags:
+      - assets
+  /assets/type/{type}:
+    get:
+      consumes:
+      - application/json
+      description: Get all assets of a specific type for the authenticated user
+      parameters:
+      - description: Asset Type
+        in: path
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.AssetsListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get assets by type
       tags:
       - assets
   /auth/change-password:
@@ -972,6 +1368,187 @@ paths:
               type: string
             type: object
       summary: Create a new definition
+      tags:
+      - definitions
+  /definitions/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing asset definition
+      parameters:
+      - description: Definition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a definition
+      tags:
+      - definitions
+    get:
+      consumes:
+      - application/json
+      description: Get a specific asset definition by ID
+      parameters:
+      - description: Definition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.DefinitionResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get definition by ID
+      tags:
+      - definitions
+    put:
+      consumes:
+      - application/json
+      description: Update an existing asset definition
+      parameters:
+      - description: Definition ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Definition update data
+        in: body
+        name: definition
+        required: true
+        schema:
+          $ref: '#/definitions/routes.UpdateDefinitionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.DefinitionResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a definition
+      tags:
+      - definitions
+  /definitions/abbreviation/{abbreviation}:
+    get:
+      consumes:
+      - application/json
+      description: Get a specific asset definition by abbreviation
+      parameters:
+      - description: Definition Abbreviation
+        in: path
+        name: abbreviation
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.DefinitionResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get definition by abbreviation
+      tags:
+      - definitions
+  /definitions/search:
+    get:
+      consumes:
+      - application/json
+      description: Search asset definitions by name or abbreviation
+      parameters:
+      - description: Search term
+        in: query
+        name: q
+        required: true
+        type: string
+      - description: Limit number of results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.DefinitionsListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search definitions
       tags:
       - definitions
 schemes:

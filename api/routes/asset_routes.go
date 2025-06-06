@@ -223,6 +223,19 @@ func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {
 	})
 }
 
+// DeleteAsset godoc
+// @Summary Delete an asset
+// @Description Delete an existing asset for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Asset ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /assets/{id} [delete]
 func (h *AssetHandler) DeleteAsset(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -263,6 +276,19 @@ func (h *AssetHandler) DeleteAsset(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusNoContent).Send(nil)
 }
 
+// GetAssetByID godoc
+// @Summary Get asset by ID
+// @Description Get a specific asset by ID for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Asset ID"
+// @Success 200 {object} map[string]AssetResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /assets/{id} [get]
 func (h *AssetHandler) GetAssetByID(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -300,6 +326,16 @@ func (h *AssetHandler) GetAssetByID(c *fiber.Ctx) error {
 	})
 }
 
+// GetUserAssets godoc
+// @Summary Get all user assets
+// @Description Get all assets for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} AssetsListResponse
+// @Failure 401 {object} map[string]string
+// @Router /assets [get]
 func (h *AssetHandler) GetUserAssets(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -330,6 +366,18 @@ func (h *AssetHandler) GetUserAssets(c *fiber.Ctx) error {
 	})
 }
 
+// GetAccountAssets godoc
+// @Summary Get assets by account
+// @Description Get all assets for a specific account of the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param accountId path string true "Account ID"
+// @Success 200 {object} AssetsListResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /assets/account/{accountId} [get]
 func (h *AssetHandler) GetAccountAssets(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -368,6 +416,18 @@ func (h *AssetHandler) GetAccountAssets(c *fiber.Ctx) error {
 	})
 }
 
+// GetAssetsByType godoc
+// @Summary Get assets by type
+// @Description Get all assets of a specific type for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param type path string true "Asset Type"
+// @Success 200 {object} AssetsListResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /assets/type/{type} [get]
 func (h *AssetHandler) GetAssetsByType(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -406,6 +466,24 @@ func (h *AssetHandler) GetAssetsByType(c *fiber.Ctx) error {
 	})
 }
 
+// FilterAssets godoc
+// @Summary Filter assets
+// @Description Filter assets with optional parameters for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param accountId query string false "Account ID"
+// @Param assetType query string false "Asset Type"
+// @Param minQuantity query number false "Minimum Quantity"
+// @Param maxQuantity query number false "Maximum Quantity"
+// @Param createdFrom query string false "Created From Date (RFC3339)"
+// @Param createdTo query string false "Created To Date (RFC3339)"
+// @Param limit query int false "Limit number of results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} AssetsListResponse
+// @Failure 401 {object} map[string]string
+// @Router /assets/filter [get]
 func (h *AssetHandler) FilterAssets(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -481,6 +559,19 @@ func (h *AssetHandler) FilterAssets(c *fiber.Ctx) error {
 	})
 }
 
+// GetAssetPerformance godoc
+// @Summary Get asset performance
+// @Description Get performance data for assets within a date range for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param startDate query string true "Start Date (RFC3339)"
+// @Param endDate query string true "End Date (RFC3339)"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /assets/performance [get]
 func (h *AssetHandler) GetAssetPerformance(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -536,6 +627,17 @@ func (h *AssetHandler) GetAssetPerformance(c *fiber.Ctx) error {
 	})
 }
 
+// GetTotalValue godoc
+// @Summary Get total asset value
+// @Description Get total value of assets for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param assetTypes query string false "Asset Types (comma separated)"
+// @Success 200 {object} TotalValueResponse
+// @Failure 401 {object} map[string]string
+// @Router /assets/total-value [get]
 func (h *AssetHandler) GetTotalValue(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {

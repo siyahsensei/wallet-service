@@ -99,6 +99,19 @@ func (h *DefinitionHandler) CreateDefinition(c *fiber.Ctx) error {
 	})
 }
 
+// UpdateDefinition godoc
+// @Summary Update a definition
+// @Description Update an existing asset definition
+// @Tags definitions
+// @Accept json
+// @Produce json
+// @Param id path string true "Definition ID"
+// @Param definition body UpdateDefinitionRequest true "Definition update data"
+// @Success 200 {object} map[string]DefinitionResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Router /definitions/{id} [put]
 func (h *DefinitionHandler) UpdateDefinition(c *fiber.Ctx) error {
 	definitionID := c.Params("id")
 	if definitionID == "" {
@@ -143,6 +156,17 @@ func (h *DefinitionHandler) UpdateDefinition(c *fiber.Ctx) error {
 	})
 }
 
+// DeleteDefinition godoc
+// @Summary Delete a definition
+// @Description Delete an existing asset definition
+// @Tags definitions
+// @Accept json
+// @Produce json
+// @Param id path string true "Definition ID"
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /definitions/{id} [delete]
 func (h *DefinitionHandler) DeleteDefinition(c *fiber.Ctx) error {
 	definitionID := c.Params("id")
 	if definitionID == "" {
@@ -170,6 +194,17 @@ func (h *DefinitionHandler) DeleteDefinition(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusNoContent).Send(nil)
 }
 
+// GetDefinitionByID godoc
+// @Summary Get definition by ID
+// @Description Get a specific asset definition by ID
+// @Tags definitions
+// @Accept json
+// @Produce json
+// @Param id path string true "Definition ID"
+// @Success 200 {object} map[string]DefinitionResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /definitions/{id} [get]
 func (h *DefinitionHandler) GetDefinitionByID(c *fiber.Ctx) error {
 	definitionID := c.Params("id")
 	if definitionID == "" {
@@ -243,6 +278,17 @@ func (h *DefinitionHandler) GetAllDefinitions(c *fiber.Ctx) error {
 	})
 }
 
+// GetDefinitionByAbbreviation godoc
+// @Summary Get definition by abbreviation
+// @Description Get a specific asset definition by abbreviation
+// @Tags definitions
+// @Accept json
+// @Produce json
+// @Param abbreviation path string true "Definition Abbreviation"
+// @Success 200 {object} map[string]DefinitionResponse
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /definitions/abbreviation/{abbreviation} [get]
 func (h *DefinitionHandler) GetDefinitionByAbbreviation(c *fiber.Ctx) error {
 	abbreviation := c.Params("abbreviation")
 	if abbreviation == "" {
@@ -272,6 +318,18 @@ func (h *DefinitionHandler) GetDefinitionByAbbreviation(c *fiber.Ctx) error {
 	})
 }
 
+// SearchDefinitions godoc
+// @Summary Search definitions
+// @Description Search asset definitions by name or abbreviation
+// @Tags definitions
+// @Accept json
+// @Produce json
+// @Param q query string true "Search term"
+// @Param limit query int false "Limit number of results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} DefinitionsListResponse
+// @Failure 400 {object} map[string]string
+// @Router /definitions/search [get]
 func (h *DefinitionHandler) SearchDefinitions(c *fiber.Ctx) error {
 	searchTerm := c.Query("q")
 	if searchTerm == "" {
