@@ -10,38 +10,6 @@ This application allows you to manage your different financial assets (bank acco
 -   **Authentication**: JWT
 -   **API Documentation**: Swagger/OpenAPI
 
-## API Documentation
-
-This project includes automatically generated Swagger documentation for all API endpoints.
-
-### Accessing Swagger UI
-
-Once the application is running, you can access the interactive Swagger UI at:
-
-```
-http://localhost:8080/swagger/
-```
-
-### Regenerating Documentation
-
-To regenerate the Swagger documentation after making changes to the API:
-
-```bash
-# Install swag CLI tool (one time setup)
-go install github.com/swaggo/swag/cmd/swag@latest
-
-# Generate/update documentation
-make swagger
-```
-
-### Authentication in Swagger
-
-For endpoints that require authentication:
-1. First, use the `/api/auth/login` or `/api/auth/register` endpoint to get a JWT token
-2. Click the "Authorize" button in Swagger UI
-3. Enter `Bearer <your-jwt-token>` in the Authorization field
-4. Now you can test authenticated endpoints
-
 ## Installation
 
 ### Prerequisites
@@ -91,6 +59,36 @@ cp .env.example .env
 make run-api
 # or directly:
 go run cmd/api/main.go
-# or use the convenient script:
-./start-with-swagger.sh
 ```
+
+## API Documentation
+
+This project includes automatically generated Swagger documentation for all API endpoints.
+
+### Accessing Swagger UI
+
+Once the application is running, you can access the interactive Swagger UI at:
+
+```
+http://localhost:8080/swagger/
+```
+
+### Regenerating Documentation
+
+To regenerate the Swagger documentation after making changes to the API:
+
+```bash
+# Install swag CLI tool (one time setup)
+go install github.com/swaggo/swag/cmd/swag@latest
+
+# Generate/update documentation
+make swagger
+```
+
+### Authentication in Swagger
+
+For endpoints that require authentication:
+1. First, use the `/api/auth/login` or `/api/auth/register` endpoint to get a JWT token
+2. Click the "Authorize" button in Swagger UI
+3. Enter `Bearer <your-jwt-token>` in the Authorization field
+4. Now you can test authenticated endpoints
