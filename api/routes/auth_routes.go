@@ -57,6 +57,16 @@ func toPublicUser(u *user.User) *UserPublic {
 	}
 }
 
+// Register godoc
+// @Summary Register a new user
+// @Description Register a new user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param user body user.RegisterUserCommand true "User registration data"
+// @Success 201 {object} TokenResponse
+// @Failure 400 {object} map[string]string
+// @Router /auth/register [post]
 func (h *AuthRoute) Register(c *fiber.Ctx) error {
 	var command user.RegisterUserCommand
 	if err := c.BodyParser(&command); err != nil {
@@ -85,6 +95,16 @@ func (h *AuthRoute) Register(c *fiber.Ctx) error {
 	})
 }
 
+// Login godoc
+// @Summary Login user
+// @Description Login user with email and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param credentials body user.LoginUserCommand true "User login credentials"
+// @Success 200 {object} TokenResponse
+// @Failure 401 {object} map[string]string
+// @Router /auth/login [post]
 func (h *AuthRoute) Login(c *fiber.Ctx) error {
 	var command user.LoginUserCommand
 	if err := c.BodyParser(&command); err != nil {
@@ -115,6 +135,16 @@ func (h *AuthRoute) Login(c *fiber.Ctx) error {
 	})
 }
 
+// Me godoc
+// @Summary Get current user information
+// @Description Get current authenticated user information
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]UserPublic
+// @Failure 401 {object} map[string]string
+// @Router /auth/me [get]
 func (h *AuthRoute) Me(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -139,6 +169,18 @@ func (h *AuthRoute) Me(c *fiber.Ctx) error {
 	})
 }
 
+// UpdateUser godoc
+// @Summary Update user information
+// @Description Update current authenticated user information
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param user body UpdateUserRequest true "User update data"
+// @Success 200 {object} map[string]UserPublic
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /auth/me [put]
 func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
 	var req UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -173,6 +215,18 @@ func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
 	})
 }
 
+// ChangePassword godoc
+// @Summary Change user password
+// @Description Change current authenticated user password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param passwords body ChangePasswordRequest true "Password change data"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /auth/change-password [put]
 func (h *AuthRoute) ChangePassword(c *fiber.Ctx) error {
 	var req ChangePasswordRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -206,6 +260,17 @@ func (h *AuthRoute) ChangePassword(c *fiber.Ctx) error {
 	})
 }
 
+// DeleteUser godoc
+// @Summary Delete user account
+// @Description Delete current authenticated user account
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param password body DeleteUserRequest true "Password confirmation"
+// @Success 200 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /auth/me [delete]
 func (h *AuthRoute) DeleteUser(c *fiber.Ctx) error {
 	var req DeleteUserRequest
 	if err := c.BodyParser(&req); err != nil {

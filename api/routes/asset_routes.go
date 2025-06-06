@@ -103,6 +103,18 @@ func toAssetPerformanceResponse(ap *asset.AssetPerformance) AssetPerformanceResp
 	}
 }
 
+// CreateAsset godoc
+// @Summary Create a new asset
+// @Description Create a new asset for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param asset body CreateAssetRequest true "Asset creation data"
+// @Success 201 {object} map[string]AssetResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /assets [post]
 func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(string)
 	if !ok {
@@ -141,6 +153,20 @@ func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 	})
 }
 
+// UpdateAsset godoc
+// @Summary Update an asset
+// @Description Update an existing asset for the authenticated user
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Asset ID"
+// @Param asset body UpdateAssetRequest true "Asset update data"
+// @Success 200 {object} map[string]AssetResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Router /assets/{id} [put]
 func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(string)
 	if !ok {

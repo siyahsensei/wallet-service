@@ -85,6 +85,18 @@ func toAccountSummaryResponse(s *account.AccountSummary) AccountSummaryResponse 
 	}
 }
 
+// CreateAccount godoc
+// @Summary Create a new account
+// @Description Create a new account for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param account body CreateAccountRequest true "Account creation data"
+// @Success 201 {object} map[string]AccountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /accounts [post]
 func (h *AccountHandler) CreateAccount(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -121,6 +133,19 @@ func (h *AccountHandler) CreateAccount(c *fiber.Ctx) error {
 	})
 }
 
+// UpdateAccount godoc
+// @Summary Update an account
+// @Description Update an existing account for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Account ID"
+// @Param account body UpdateAccountRequest true "Account update data"
+// @Success 200 {object} map[string]AccountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /accounts/{id} [put]
 func (h *AccountHandler) UpdateAccount(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -164,6 +189,18 @@ func (h *AccountHandler) UpdateAccount(c *fiber.Ctx) error {
 	})
 }
 
+// DeleteAccount godoc
+// @Summary Delete an account
+// @Description Delete an existing account for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Account ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /accounts/{id} [delete]
 func (h *AccountHandler) DeleteAccount(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -196,6 +233,18 @@ func (h *AccountHandler) DeleteAccount(c *fiber.Ctx) error {
 	})
 }
 
+// GetAccountByID godoc
+// @Summary Get account by ID
+// @Description Get a specific account by ID for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Account ID"
+// @Success 200 {object} map[string]AccountResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /accounts/{id} [get]
 func (h *AccountHandler) GetAccountByID(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -228,6 +277,16 @@ func (h *AccountHandler) GetAccountByID(c *fiber.Ctx) error {
 	})
 }
 
+// GetUserAccounts godoc
+// @Summary Get all user accounts
+// @Description Get all accounts for the authenticated user
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} AccountsListResponse
+// @Failure 401 {object} map[string]string
+// @Router /accounts [get]
 func (h *AccountHandler) GetUserAccounts(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
@@ -437,6 +496,16 @@ func (h *AccountHandler) UpdateAccountBalance(c *fiber.Ctx) error {
 	})
 }
 
+// GetAccountSummary godoc
+// @Summary Get account summary
+// @Description Get summary statistics for all user accounts
+// @Tags accounts
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]AccountSummaryResponse
+// @Failure 401 {object} map[string]string
+// @Router /accounts/summary [get]
 func (h *AccountHandler) GetAccountSummary(c *fiber.Ctx) error {
 	userIDValue, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {

@@ -1,0 +1,884 @@
+basePath: /api
+definitions:
+  account.AccountType:
+    enum:
+    - BANK_ACCOUNT
+    - SAVINGS_ACCOUNT
+    - CHECKING_ACCOUNT
+    - CREDIT_CARD
+    - INVESTMENT_ACCOUNT
+    - CRYPTO_WALLET
+    - CRYPTO_EXCHANGE
+    - BROKER
+    - PENSION
+    - INSURANCE
+    - HOME
+    - SAFE
+    - OTHER
+    type: string
+    x-enum-varnames:
+    - BankAccount
+    - SavingsAccount
+    - CheckingAccount
+    - CreditCard
+    - InvestmentAccount
+    - CryptoWallet
+    - CryptoExchange
+    - Broker
+    - Pension
+    - Insurance
+    - Home
+    - Safe
+    - Other
+  asset.AssetType:
+    enum:
+    - CASH
+    - TERM_DEPOSIT
+    - STOCK
+    - ETF
+    - FUND
+    - BOND
+    - CRYPTOCURRENCY
+    - NFT
+    - DEFI_TOKEN
+    - PRECIOUS_METAL
+    - REAL_ESTATE
+    - DEBT
+    - RECEIVABLE
+    - SALARY
+    - OTHER
+    type: string
+    x-enum-varnames:
+    - Cash
+    - TermDeposit
+    - Stock
+    - ETF
+    - Fund
+    - Bond
+    - Cryptocurrency
+    - NFT
+    - DeFiToken
+    - PreciousMetal
+    - RealEstate
+    - Debt
+    - Receivable
+    - Salary
+    - Other
+  routes.AccountResponse:
+    properties:
+      accountType:
+        type: string
+      balance:
+        type: number
+      createdAt:
+        type: string
+      currencyCode:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  routes.AccountSummaryResponse:
+    properties:
+      byCurrency:
+        additionalProperties:
+          type: number
+        type: object
+      byType:
+        additionalProperties:
+          type: integer
+        type: object
+      totalAccounts:
+        type: integer
+      totalBalance:
+        type: number
+    type: object
+  routes.AccountsListResponse:
+    properties:
+      accounts:
+        items:
+          $ref: '#/definitions/routes.AccountResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  routes.AssetResponse:
+    properties:
+      accountId:
+        type: string
+      createdAt:
+        type: string
+      definitionId:
+        type: string
+      id:
+        type: string
+      notes:
+        type: string
+      purchaseDate:
+        type: string
+      quantity:
+        type: number
+      type:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  routes.ChangePasswordRequest:
+    properties:
+      confirmPassword:
+        minLength: 8
+        type: string
+      newPassword:
+        minLength: 8
+        type: string
+      oldPassword:
+        type: string
+    required:
+    - confirmPassword
+    - newPassword
+    - oldPassword
+    type: object
+  routes.CreateAccountRequest:
+    properties:
+      accountType:
+        $ref: '#/definitions/account.AccountType'
+      balance:
+        type: number
+      currencyCode:
+        type: string
+      name:
+        type: string
+    required:
+    - accountType
+    - currencyCode
+    - name
+    type: object
+  routes.CreateAssetRequest:
+    properties:
+      accountId:
+        type: string
+      definitionId:
+        type: string
+      notes:
+        type: string
+      purchaseDate:
+        type: integer
+      quantity:
+        type: number
+      type:
+        $ref: '#/definitions/asset.AssetType'
+    required:
+    - accountId
+    - definitionId
+    - purchaseDate
+    - quantity
+    - type
+    type: object
+  routes.CreateDefinitionRequest:
+    properties:
+      abbreviation:
+        type: string
+      name:
+        type: string
+      suffix:
+        type: string
+    required:
+    - abbreviation
+    - name
+    type: object
+  routes.DefinitionResponse:
+    properties:
+      abbreviation:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      suffix:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  routes.DefinitionsListResponse:
+    properties:
+      definitions:
+        items:
+          $ref: '#/definitions/routes.DefinitionResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  routes.DeleteUserRequest:
+    properties:
+      password:
+        type: string
+    required:
+    - password
+    type: object
+  routes.TokenResponse:
+    properties:
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/routes.UserPublic'
+    type: object
+  routes.UpdateAccountRequest:
+    properties:
+      accountType:
+        $ref: '#/definitions/account.AccountType'
+      balance:
+        type: number
+      currencyCode:
+        type: string
+      name:
+        type: string
+    required:
+    - accountType
+    - currencyCode
+    - name
+    type: object
+  routes.UpdateAssetRequest:
+    properties:
+      accountId:
+        type: string
+      definitionId:
+        type: string
+      notes:
+        type: string
+      purchaseDate:
+        type: integer
+      quantity:
+        type: number
+      type:
+        $ref: '#/definitions/asset.AssetType'
+    required:
+    - accountId
+    - definitionId
+    - purchaseDate
+    - quantity
+    - type
+    type: object
+  routes.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    type: object
+  routes.UserPublic:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+    type: object
+  user.LoginUserCommand:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  user.RegisterUserCommand:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        minLength: 8
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    - password
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a wallet service API for managing user accounts, assets, and
+    transactions
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Wallet Service API
+  version: "1.0"
+paths:
+  /accounts:
+    get:
+      consumes:
+      - application/json
+      description: Get all accounts for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.AccountsListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all user accounts
+      tags:
+      - accounts
+    post:
+      consumes:
+      - application/json
+      description: Create a new account for the authenticated user
+      parameters:
+      - description: Account creation data
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/routes.CreateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.AccountResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new account
+      tags:
+      - accounts
+  /accounts/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an existing account for the authenticated user
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an account
+      tags:
+      - accounts
+    get:
+      consumes:
+      - application/json
+      description: Get a specific account by ID for the authenticated user
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.AccountResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get account by ID
+      tags:
+      - accounts
+    put:
+      consumes:
+      - application/json
+      description: Update an existing account for the authenticated user
+      parameters:
+      - description: Account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Account update data
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/routes.UpdateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.AccountResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an account
+      tags:
+      - accounts
+  /accounts/summary:
+    get:
+      consumes:
+      - application/json
+      description: Get summary statistics for all user accounts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.AccountSummaryResponse'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get account summary
+      tags:
+      - accounts
+  /assets:
+    post:
+      consumes:
+      - application/json
+      description: Create a new asset for the authenticated user
+      parameters:
+      - description: Asset creation data
+        in: body
+        name: asset
+        required: true
+        schema:
+          $ref: '#/definitions/routes.CreateAssetRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.AssetResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new asset
+      tags:
+      - assets
+  /assets/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update an existing asset for the authenticated user
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Asset update data
+        in: body
+        name: asset
+        required: true
+        schema:
+          $ref: '#/definitions/routes.UpdateAssetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.AssetResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an asset
+      tags:
+      - assets
+  /auth/change-password:
+    put:
+      consumes:
+      - application/json
+      description: Change current authenticated user password
+      parameters:
+      - description: Password change data
+        in: body
+        name: passwords
+        required: true
+        schema:
+          $ref: '#/definitions/routes.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Change user password
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user with email and password
+      parameters:
+      - description: User login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/user.LoginUserCommand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.TokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login user
+      tags:
+      - auth
+  /auth/me:
+    delete:
+      consumes:
+      - application/json
+      description: Delete current authenticated user account
+      parameters:
+      - description: Password confirmation
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/routes.DeleteUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete user account
+      tags:
+      - auth
+    get:
+      consumes:
+      - application/json
+      description: Get current authenticated user information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.UserPublic'
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user information
+      tags:
+      - auth
+    put:
+      consumes:
+      - application/json
+      description: Update current authenticated user information
+      parameters:
+      - description: User update data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/routes.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.UserPublic'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user information
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email and password
+      parameters:
+      - description: User registration data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/user.RegisterUserCommand'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/routes.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - auth
+  /definitions:
+    get:
+      consumes:
+      - application/json
+      description: Get all asset definitions with optional pagination
+      parameters:
+      - description: Limit number of results
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/routes.DefinitionsListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all definitions
+      tags:
+      - definitions
+    post:
+      consumes:
+      - application/json
+      description: Create a new asset definition
+      parameters:
+      - description: Definition creation data
+        in: body
+        name: definition
+        required: true
+        schema:
+          $ref: '#/definitions/routes.CreateDefinitionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              $ref: '#/definitions/routes.DefinitionResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new definition
+      tags:
+      - definitions
+schemes:
+- http
+- https
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

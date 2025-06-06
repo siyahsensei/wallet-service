@@ -57,6 +57,17 @@ func toDefinitionResponse(d *definition.Definition) DefinitionResponse {
 	}
 }
 
+// CreateDefinition godoc
+// @Summary Create a new definition
+// @Description Create a new asset definition
+// @Tags definitions
+// @Accept json
+// @Produce json
+// @Param definition body CreateDefinitionRequest true "Definition creation data"
+// @Success 201 {object} map[string]DefinitionResponse
+// @Failure 400 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Router /definitions [post]
 func (h *DefinitionHandler) CreateDefinition(c *fiber.Ctx) error {
 	var req CreateDefinitionRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -188,6 +199,17 @@ func (h *DefinitionHandler) GetDefinitionByID(c *fiber.Ctx) error {
 	})
 }
 
+// GetAllDefinitions godoc
+// @Summary Get all definitions
+// @Description Get all asset definitions with optional pagination
+// @Tags definitions
+// @Accept json
+// @Produce json
+// @Param limit query int false "Limit number of results"
+// @Param offset query int false "Offset for pagination"
+// @Success 200 {object} DefinitionsListResponse
+// @Failure 500 {object} map[string]string
+// @Router /definitions [get]
 func (h *DefinitionHandler) GetAllDefinitions(c *fiber.Ctx) error {
 	query := definition.GetAllDefinitionsQuery{}
 

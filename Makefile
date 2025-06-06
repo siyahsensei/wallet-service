@@ -1,4 +1,4 @@
-.PHONY: build test run migrate-up migrate-down
+.PHONY: build test run migrate-up migrate-down swagger
 
 # Build the application
 build:
@@ -11,6 +11,10 @@ test:
 # Run the API server
 run-api:
 	go run ./cmd/api/main.go
+
+# Generate Swagger documentation
+swagger:
+	swag init -g cmd/api/main.go -o docs
 
 # Create DB migrations (requires golang-migrate)
 migrate-create:
