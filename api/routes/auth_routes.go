@@ -93,16 +93,25 @@ func (h *AuthRoute) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	loginResponse, err := h.userService.HandleLoginUserCommand(c.Context(), command)
+	// Validate credentials using user service
+	userInfo, err := h.userService.HandleLoginUserCommand(c.Context(), command)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Invalid credentials",
 		})
 	}
 
+	// Generate token using auth middleware
+	token, err := h.jwtAuth.GenerateToken(userInfo.ID, userInfo.Email, h.userService.GetTokenExpiry())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to generate token",
+		})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(TokenResponse{
-		Token: loginResponse.Token,
-		User:  toPublicUser(loginResponse.User),
+		Token: token,
+		User:  toPublicUser(userInfo),
 	})
 }
 

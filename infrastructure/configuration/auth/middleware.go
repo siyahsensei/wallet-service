@@ -15,12 +15,6 @@ type JWTMiddleware struct {
 	TokenLookup string
 }
 
-type Claims struct {
-	UserID uuid.UUID `json:"user_id"`
-	Email  string    `json:"email"`
-	jwt.RegisteredClaims
-}
-
 func NewJWTMiddleware(secret string) *JWTMiddleware {
 	return &JWTMiddleware{
 		Secret:      secret,
@@ -29,14 +23,16 @@ func NewJWTMiddleware(secret string) *JWTMiddleware {
 }
 
 func (m *JWTMiddleware) GenerateToken(userID uuid.UUID, email string, duration time.Duration) (string, error) {
-	claims := &Claims{
-		UserID: userID,
-		Email:  email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
-	}
+	now := time.Now()
+	exp := now.Add(duration)
+
+	claims := jwt.MapClaims{}
+	claims["user_id"] = userID.String()
+	claims["email"] = email
+	claims["exp"] = exp.Unix()
+	claims["iat"] = now.Unix()
+	claims["nbf"] = now.Unix()
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(m.Secret))
 }
@@ -58,7 +54,7 @@ func (m *JWTMiddleware) Middleware() fiber.Handler {
 		}
 
 		tokenString := tokenParts[1]
-		claims := &Claims{}
+		claims := jwt.MapClaims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -78,8 +74,29 @@ func (m *JWTMiddleware) Middleware() fiber.Handler {
 			})
 		}
 
-		c.Locals("userID", claims.UserID)
-		c.Locals("email", claims.Email)
+		userIDStr, ok := claims["user_id"].(string)
+		if !ok {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid token claims",
+			})
+		}
+
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid user ID format",
+			})
+		}
+
+		email, ok := claims["email"].(string)
+		if !ok {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Invalid token claims",
+			})
+		}
+
+		c.Locals("userID", userID)
+		c.Locals("email", email)
 		return c.Next()
 	}
 }
@@ -97,7 +114,7 @@ func (m *JWTMiddleware) Optional() fiber.Handler {
 		}
 
 		tokenString := tokenParts[1]
-		claims := &Claims{}
+		claims := jwt.MapClaims{}
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -109,8 +126,23 @@ func (m *JWTMiddleware) Optional() fiber.Handler {
 			return c.Next()
 		}
 
-		c.Locals("userID", claims.UserID)
-		c.Locals("email", claims.Email)
+		userIDStr, ok := claims["user_id"].(string)
+		if !ok {
+			return c.Next()
+		}
+
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			return c.Next()
+		}
+
+		email, ok := claims["email"].(string)
+		if !ok {
+			return c.Next()
+		}
+
+		c.Locals("userID", userID)
+		c.Locals("email", email)
 		return c.Next()
 	}
 }

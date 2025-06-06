@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -13,12 +12,6 @@ type Handler struct {
 	repo        Repository
 	jwtSecret   []byte
 	tokenExpiry time.Duration
-}
-
-type Claims struct {
-	UserID uuid.UUID `json:"userId"`
-	Email  string    `json:"email"`
-	jwt.RegisteredClaims
 }
 
 type LoginResponse struct {
@@ -53,7 +46,7 @@ func (s *Handler) HandleRegisterUserCommand(ctx context.Context, command Registe
 	return user, nil
 }
 
-func (s *Handler) HandleLoginUserCommand(ctx context.Context, command LoginUserCommand) (*LoginResponse, error) {
+func (s *Handler) HandleLoginUserCommand(ctx context.Context, command LoginUserCommand) (*User, error) {
 	user, err := s.repo.GetByEmail(ctx, command.Email)
 	if err != nil {
 		return nil, errors.New("invalid credentials")
@@ -63,26 +56,7 @@ func (s *Handler) HandleLoginUserCommand(ctx context.Context, command LoginUserC
 		return nil, errors.New("invalid credentials")
 	}
 
-	claims := &Claims{
-		UserID: user.ID,
-		Email:  user.Email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(s.tokenExpiry)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			NotBefore: jwt.NewNumericDate(time.Now()),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString(s.jwtSecret)
-	if err != nil {
-		return nil, err
-	}
-
-	return &LoginResponse{
-		Token: signedToken,
-		User:  user,
-	}, nil
+	return user, nil
 }
 
 func (s *Handler) HandleUpdateUserCommand(ctx context.Context, command UpdateUserCommand) (*User, error) {
@@ -191,16 +165,12 @@ func (s *Handler) RegisterUser(ctx context.Context, email, password, firstName, 
 	return s.HandleRegisterUserCommand(ctx, command)
 }
 
-func (s *Handler) LoginUser(ctx context.Context, email, password string) (string, error) {
+func (s *Handler) LoginUser(ctx context.Context, email, password string) (*User, error) {
 	command := LoginUserCommand{
 		Email:    email,
 		Password: password,
 	}
-	response, err := s.HandleLoginUserCommand(ctx, command)
-	if err != nil {
-		return "", err
-	}
-	return response.Token, nil
+	return s.HandleLoginUserCommand(ctx, command)
 }
 
 func (s *Handler) GetUserByID(ctx context.Context, id uuid.UUID) (*User, error) {

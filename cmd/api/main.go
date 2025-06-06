@@ -17,12 +17,14 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"siyahsensei/wallet-service/configs"
+	"siyahsensei/wallet-service/domain/account"
 	"siyahsensei/wallet-service/domain/asset"
 	"siyahsensei/wallet-service/domain/definition"
 	"siyahsensei/wallet-service/domain/user"
 	"siyahsensei/wallet-service/infrastructure/configuration/auth"
 	"siyahsensei/wallet-service/infrastructure/configuration/database"
 	customLogger "siyahsensei/wallet-service/infrastructure/configuration/logger"
+	"siyahsensei/wallet-service/infrastructure/persistence/accountrepo"
 	"siyahsensei/wallet-service/infrastructure/persistence/assetrepo"
 	"siyahsensei/wallet-service/infrastructure/persistence/definitionrepo"
 	"siyahsensei/wallet-service/infrastructure/persistence/userrepo"
@@ -63,6 +65,9 @@ func main() {
 	definitionRepo := definitionrepo.NewPostgresRepository(db)
 	definitionService := definition.NewHandler(definitionRepo)
 
+	accountRepo := accountrepo.NewPostgresRepository(db)
+	accountService := account.NewHandler(accountRepo)
+
 	assetRepo := assetrepo.NewPostgresRepository(db)
 	assetService := asset.NewHandler(assetRepo)
 
@@ -83,11 +88,13 @@ func main() {
 
 	authRoute := routes.NewAuthRoute(userService, jwtMiddleware)
 	definitionHandler := routes.NewDefinitionHandler(definitionService)
+	accountHandler := routes.NewAccountHandler(accountService)
 	assetHandler := routes.NewAssetHandler(assetService)
 
 	api := app.Group("/api")
 	authRoute.RegisterRoutes(api.Group("/auth"), jwtMiddleware.Middleware())
 	definitionHandler.RegisterRoutes(api)
+	accountHandler.RegisterRoutes(api, jwtMiddleware.Middleware())
 	assetHandler.RegisterRoutes(api, jwtMiddleware.Middleware())
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{

@@ -2,8 +2,8 @@
 -- SQL section 'Down' is executed when this migration is rolled back
 
 -- Drop indexes first
-DROP INDEX IF EXISTS idx_assets_purchase_date;
-DROP INDEX IF EXISTS idx_assets_type;
+DROP INDEX IF EXISTS idx_assets_asset_type;
+DROP INDEX IF EXISTS idx_definitions_type;
 DROP INDEX IF EXISTS idx_assets_definition_id;
 DROP INDEX IF EXISTS idx_assets_account_id;
 DROP INDEX IF EXISTS idx_assets_user_id;
