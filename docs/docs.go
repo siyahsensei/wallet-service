@@ -1463,13 +1463,19 @@ const docTemplate = `{
                         "description": "Offset for pagination",
                         "name": "offset",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Definition type",
+                        "name": "type",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/routes.DefinitionsListResponse"
+                            "$ref": "#/definitions/presentation.DefinitionsListResponse"
                         }
                     },
                     "500": {
@@ -1502,7 +1508,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.CreateDefinitionRequest"
+                            "$ref": "#/definitions/presentation.CreateDefinitionRequest"
                         }
                     }
                 ],
@@ -1512,7 +1518,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.DefinitionResponse"
+                                "$ref": "#/definitions/presentation.DefinitionResponse"
                             }
                         }
                     },
@@ -1527,59 +1533,6 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Conflict",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/definitions/abbreviation/{abbreviation}": {
-            "get": {
-                "description": "Get a specific asset definition by abbreviation",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "definitions"
-                ],
-                "summary": "Get definition by abbreviation",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Definition Abbreviation",
-                        "name": "abbreviation",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "$ref": "#/definitions/routes.DefinitionResponse"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -1628,7 +1581,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/routes.DefinitionsListResponse"
+                            "$ref": "#/definitions/presentation.DefinitionsListResponse"
                         }
                     },
                     "400": {
@@ -1671,7 +1624,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.DefinitionResponse"
+                                "$ref": "#/definitions/presentation.DefinitionResponse"
                             }
                         }
                     },
@@ -1721,7 +1674,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.UpdateDefinitionRequest"
+                            "$ref": "#/definitions/presentation.UpdateDefinitionRequest"
                         }
                     }
                 ],
@@ -1731,7 +1684,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.DefinitionResponse"
+                                "$ref": "#/definitions/presentation.DefinitionResponse"
                             }
                         }
                     },
@@ -1881,6 +1834,79 @@ const docTemplate = `{
                 "Salary",
                 "Other"
             ]
+        },
+        "presentation.CreateDefinitionRequest": {
+            "type": "object",
+            "required": [
+                "abbreviation",
+                "name"
+            ],
+            "properties": {
+                "abbreviation": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "suffix": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.DefinitionResponse": {
+            "type": "object",
+            "properties": {
+                "abbreviation": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "suffix": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.DefinitionsListResponse": {
+            "type": "object",
+            "properties": {
+                "definitions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presentation.DefinitionResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "presentation.UpdateDefinitionRequest": {
+            "type": "object",
+            "required": [
+                "abbreviation",
+                "name"
+            ],
+            "properties": {
+                "abbreviation": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "suffix": {
+                    "type": "string"
+                }
+            }
         },
         "routes.AccountResponse": {
             "type": "object",
@@ -2141,61 +2167,6 @@ const docTemplate = `{
                 }
             }
         },
-        "routes.CreateDefinitionRequest": {
-            "type": "object",
-            "required": [
-                "abbreviation",
-                "name"
-            ],
-            "properties": {
-                "abbreviation": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "suffix": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.DefinitionResponse": {
-            "type": "object",
-            "properties": {
-                "abbreviation": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "suffix": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.DefinitionsListResponse": {
-            "type": "object",
-            "properties": {
-                "definitions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/routes.DefinitionResponse"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
         "routes.DeleteUserRequest": {
             "type": "object",
             "required": [
@@ -2268,24 +2239,6 @@ const docTemplate = `{
                 },
                 "type": {
                     "$ref": "#/definitions/asset.AssetType"
-                }
-            }
-        },
-        "routes.UpdateDefinitionRequest": {
-            "type": "object",
-            "required": [
-                "abbreviation",
-                "name"
-            ],
-            "properties": {
-                "abbreviation": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "suffix": {
-                    "type": "string"
                 }
             }
         },

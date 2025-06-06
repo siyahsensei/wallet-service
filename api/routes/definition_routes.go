@@ -19,14 +19,25 @@ func NewDefinitionRoute(definitionService *definition.Handler) *DefinitionRoute 
 	}
 }
 
+func (h *DefinitionRoute) RegisterRoutes(router fiber.Router) {
+	definitionGroup := router.Group("/definitions")
+
+	definitionGroup.Post("/", h.CreateDefinition)
+	definitionGroup.Put("/:id", h.UpdateDefinition)
+	definitionGroup.Delete("/:id", h.DeleteDefinition)
+	definitionGroup.Get("/:id", h.GetDefinitionByID)
+	definitionGroup.Get("/", h.GetAllDefinitions)
+	definitionGroup.Get("/search", h.SearchDefinitions)
+}
+
 // CreateDefinition godoc
 // @Summary Create a new definition
 // @Description Create a new asset definition
 // @Tags definitions
 // @Accept json
 // @Produce json
-// @Param definition body CreateDefinitionRequest true "Definition creation data"
-// @Success 201 {object} map[string]DefinitionResponse
+// @Param definition body presentation.CreateDefinitionRequest true "Definition creation data"
+// @Success 201 {object} map[string]presentation.DefinitionResponse
 // @Failure 400 {object} map[string]string
 // @Failure 409 {object} map[string]string
 // @Router /definitions [post]
@@ -62,8 +73,8 @@ func (r *DefinitionRoute) CreateDefinition(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "Definition ID"
-// @Param definition body UpdateDefinitionRequest true "Definition update data"
-// @Success 200 {object} map[string]DefinitionResponse
+// @Param definition body presentation.UpdateDefinitionRequest true "Definition update data"
+// @Success 200 {object} map[string]presentation.DefinitionResponse
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 409 {object} map[string]string
@@ -150,7 +161,7 @@ func (r *DefinitionRoute) DeleteDefinition(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param id path string true "Definition ID"
-// @Success 200 {object} map[string]DefinitionResponse
+// @Success 200 {object} map[string]presentation.DefinitionResponse
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Router /definitions/{id} [get]
@@ -191,7 +202,7 @@ func (h *DefinitionRoute) GetDefinitionByID(c *fiber.Ctx) error {
 // @Param limit query int false "Limit number of results"
 // @Param offset query int false "Offset for pagination"
 // @Param type query string false "Definition type"
-// @Success 200 {object} DefinitionsListResponse
+// @Success 200 {object} presentation.DefinitionsListResponse
 // @Failure 500 {object} map[string]string
 // @Router /definitions [get]
 func (h *DefinitionRoute) GetAllDefinitions(c *fiber.Ctx) error {
@@ -235,7 +246,7 @@ func (h *DefinitionRoute) GetAllDefinitions(c *fiber.Ctx) error {
 // @Param q query string true "Search term"
 // @Param limit query int false "Limit number of results"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} DefinitionsListResponse
+// @Success 200 {object} presentation.DefinitionsListResponse
 // @Failure 400 {object} map[string]string
 // @Router /definitions/search [get]
 func (h *DefinitionRoute) SearchDefinitions(c *fiber.Ctx) error {
@@ -282,15 +293,4 @@ func (h *DefinitionRoute) SearchDefinitions(c *fiber.Ctx) error {
 		Definitions: definitionResponses,
 		Total:       len(definitionResponses),
 	})
-}
-
-func (h *DefinitionRoute) RegisterRoutes(router fiber.Router) {
-	definitionGroup := router.Group("/definitions")
-
-	definitionGroup.Post("/", h.CreateDefinition)
-	definitionGroup.Put("/:id", h.UpdateDefinition)
-	definitionGroup.Delete("/:id", h.DeleteDefinition)
-	definitionGroup.Get("/:id", h.GetDefinitionByID)
-	definitionGroup.Get("/", h.GetAllDefinitions)
-	definitionGroup.Get("/search", h.SearchDefinitions)
 }

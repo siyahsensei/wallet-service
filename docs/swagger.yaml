@@ -64,6 +64,54 @@ definitions:
     - Receivable
     - Salary
     - Other
+  presentation.CreateDefinitionRequest:
+    properties:
+      abbreviation:
+        type: string
+      name:
+        type: string
+      suffix:
+        type: string
+    required:
+    - abbreviation
+    - name
+    type: object
+  presentation.DefinitionResponse:
+    properties:
+      abbreviation:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      suffix:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  presentation.DefinitionsListResponse:
+    properties:
+      definitions:
+        items:
+          $ref: '#/definitions/presentation.DefinitionResponse'
+        type: array
+      total:
+        type: integer
+    type: object
+  presentation.UpdateDefinitionRequest:
+    properties:
+      abbreviation:
+        type: string
+      name:
+        type: string
+      suffix:
+        type: string
+    required:
+    - abbreviation
+    - name
+    type: object
   routes.AccountResponse:
     properties:
       accountType:
@@ -236,42 +284,6 @@ definitions:
     - quantity
     - type
     type: object
-  routes.CreateDefinitionRequest:
-    properties:
-      abbreviation:
-        type: string
-      name:
-        type: string
-      suffix:
-        type: string
-    required:
-    - abbreviation
-    - name
-    type: object
-  routes.DefinitionResponse:
-    properties:
-      abbreviation:
-        type: string
-      createdAt:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      suffix:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  routes.DefinitionsListResponse:
-    properties:
-      definitions:
-        items:
-          $ref: '#/definitions/routes.DefinitionResponse'
-        type: array
-      total:
-        type: integer
-    type: object
   routes.DeleteUserRequest:
     properties:
       password:
@@ -321,18 +333,6 @@ definitions:
     - purchaseDate
     - quantity
     - type
-    type: object
-  routes.UpdateDefinitionRequest:
-    properties:
-      abbreviation:
-        type: string
-      name:
-        type: string
-      suffix:
-        type: string
-    required:
-    - abbreviation
-    - name
     type: object
   routes.UpdateUserRequest:
     properties:
@@ -1319,13 +1319,17 @@ paths:
         in: query
         name: offset
         type: integer
+      - description: Definition type
+        in: query
+        name: type
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/routes.DefinitionsListResponse'
+            $ref: '#/definitions/presentation.DefinitionsListResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -1345,7 +1349,7 @@ paths:
         name: definition
         required: true
         schema:
-          $ref: '#/definitions/routes.CreateDefinitionRequest'
+          $ref: '#/definitions/presentation.CreateDefinitionRequest'
       produces:
       - application/json
       responses:
@@ -1353,7 +1357,7 @@ paths:
           description: Created
           schema:
             additionalProperties:
-              $ref: '#/definitions/routes.DefinitionResponse'
+              $ref: '#/definitions/presentation.DefinitionResponse'
             type: object
         "400":
           description: Bad Request
@@ -1418,7 +1422,7 @@ paths:
           description: OK
           schema:
             additionalProperties:
-              $ref: '#/definitions/routes.DefinitionResponse'
+              $ref: '#/definitions/presentation.DefinitionResponse'
             type: object
         "400":
           description: Bad Request
@@ -1450,7 +1454,7 @@ paths:
         name: definition
         required: true
         schema:
-          $ref: '#/definitions/routes.UpdateDefinitionRequest'
+          $ref: '#/definitions/presentation.UpdateDefinitionRequest'
       produces:
       - application/json
       responses:
@@ -1458,7 +1462,7 @@ paths:
           description: OK
           schema:
             additionalProperties:
-              $ref: '#/definitions/routes.DefinitionResponse'
+              $ref: '#/definitions/presentation.DefinitionResponse'
             type: object
         "400":
           description: Bad Request
@@ -1479,41 +1483,6 @@ paths:
               type: string
             type: object
       summary: Update a definition
-      tags:
-      - definitions
-  /definitions/abbreviation/{abbreviation}:
-    get:
-      consumes:
-      - application/json
-      description: Get a specific asset definition by abbreviation
-      parameters:
-      - description: Definition Abbreviation
-        in: path
-        name: abbreviation
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              $ref: '#/definitions/routes.DefinitionResponse'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Get definition by abbreviation
       tags:
       - definitions
   /definitions/search:
@@ -1541,7 +1510,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/routes.DefinitionsListResponse'
+            $ref: '#/definitions/presentation.DefinitionsListResponse'
         "400":
           description: Bad Request
           schema:
