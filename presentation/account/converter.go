@@ -29,16 +29,15 @@ func ToAccountWithAssetsResponse(a *account.AccountWithAssets) AccountWithAssets
 	}
 
 	return AccountWithAssetsResponse{
-		ID:            a.Account.ID.String(),
-		UserID:        a.Account.UserID.String(),
-		Name:          a.Account.Name,
-		AccountType:   string(a.Account.AccountType),
-		CreatedAt:     a.Account.CreatedAt,
-		UpdatedAt:     a.Account.UpdatedAt,
-		Assets:        assets,
-		TotalBalances: a.TotalBalances,
-		AssetCounts:   a.AssetCounts,
-		LastUpdated:   a.LastUpdated,
+		ID:          a.Account.ID.String(),
+		UserID:      a.Account.UserID.String(),
+		Name:        a.Account.Name,
+		AccountType: string(a.Account.AccountType),
+		CreatedAt:   a.Account.CreatedAt,
+		UpdatedAt:   a.Account.UpdatedAt,
+		Assets:      assets,
+		AssetCounts: a.AssetCounts,
+		LastUpdated: a.LastUpdated,
 	}
 }
 

@@ -92,7 +92,6 @@ func (r *PostgresRepository) GetByIDWithAssets(ctx context.Context, id uuid.UUID
 	defer rows.Close()
 
 	var assets []account.AssetInfo
-	totalBalances := make(map[string]float64)
 	assetCounts := make(map[string]int)
 	var lastUpdated *time.Time
 
@@ -116,8 +115,7 @@ func (r *PostgresRepository) GetByIDWithAssets(ctx context.Context, id uuid.UUID
 
 		assets = append(assets, asset)
 
-		// Calculate totals (simplified - in real app you'd need current prices)
-		totalBalances[asset.Currency] += asset.Quantity
+		// Count assets by type
 		assetCounts[asset.Type]++
 
 		if lastUpdated == nil || asset.UpdatedAt.After(*lastUpdated) {
@@ -126,11 +124,10 @@ func (r *PostgresRepository) GetByIDWithAssets(ctx context.Context, id uuid.UUID
 	}
 
 	return &account.AccountWithAssets{
-		Account:       *acc,
-		Assets:        assets,
-		TotalBalances: totalBalances,
-		AssetCounts:   assetCounts,
-		LastUpdated:   lastUpdated,
+		Account:     *acc,
+		Assets:      assets,
+		AssetCounts: assetCounts,
+		LastUpdated: lastUpdated,
 	}, nil
 }
 

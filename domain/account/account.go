@@ -33,16 +33,13 @@ type Account struct {
 	UpdatedAt   time.Time   `json:"updatedAt" db:"updated_at"`
 }
 
-// AccountWithAssets represents an account with its associated assets and calculated balances
 type AccountWithAssets struct {
 	Account
-	Assets        []AssetInfo        `json:"assets"`
-	TotalBalances map[string]float64 `json:"totalBalances"` // currency -> total balance
-	AssetCounts   map[string]int     `json:"assetCounts"`   // asset type -> count
-	LastUpdated   *time.Time         `json:"lastUpdated"`   // last asset update time
+	Assets      []AssetInfo    `json:"assets"`
+	AssetCounts map[string]int `json:"assetCounts"`
+	LastUpdated *time.Time     `json:"lastUpdated"`
 }
 
-// AssetInfo represents basic asset information for account response
 type AssetInfo struct {
 	ID           uuid.UUID `json:"id"`
 	DefinitionID uuid.UUID `json:"definitionId"`

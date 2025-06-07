@@ -25,16 +25,15 @@ type AccountResponse struct {
 }
 
 type AccountWithAssetsResponse struct {
-	ID            string              `json:"id"`
-	UserID        string              `json:"userId"`
-	Name          string              `json:"name"`
-	AccountType   string              `json:"accountType"`
-	CreatedAt     time.Time           `json:"createdAt"`
-	UpdatedAt     time.Time           `json:"updatedAt"`
-	Assets        []AssetInfoResponse `json:"assets"`
-	TotalBalances map[string]float64  `json:"totalBalances"`
-	AssetCounts   map[string]int      `json:"assetCounts"`
-	LastUpdated   *time.Time          `json:"lastUpdated"`
+	ID          string              `json:"id"`
+	UserID      string              `json:"userId"`
+	Name        string              `json:"name"`
+	AccountType string              `json:"accountType"`
+	CreatedAt   time.Time           `json:"createdAt"`
+	UpdatedAt   time.Time           `json:"updatedAt"`
+	Assets      []AssetInfoResponse `json:"assets"`
+	AssetCounts map[string]int      `json:"assetCounts"`
+	LastUpdated *time.Time          `json:"lastUpdated"`
 }
 
 type AssetInfoResponse struct {
