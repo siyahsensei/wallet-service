@@ -64,6 +64,43 @@ definitions:
     - Receivable
     - Salary
     - Other
+  presentation.AccountResponse:
+    properties:
+      accountType:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  presentation.AccountSummaryResponse:
+    properties:
+      byCurrency:
+        additionalProperties:
+          type: number
+        type: object
+      byType:
+        additionalProperties:
+          type: integer
+        type: object
+      totalAccounts:
+        type: integer
+    type: object
+  presentation.AccountsListResponse:
+    properties:
+      accounts:
+        items:
+          $ref: '#/definitions/presentation.AccountResponse'
+        type: array
+      total:
+        type: integer
+    type: object
   presentation.AssetResponse:
     properties:
       accountId:
@@ -110,6 +147,16 @@ definitions:
     - confirmPassword
     - newPassword
     - oldPassword
+    type: object
+  presentation.CreateAccountRequest:
+    properties:
+      accountType:
+        $ref: '#/definitions/account.AccountType'
+      name:
+        type: string
+    required:
+    - accountType
+    - name
     type: object
   presentation.CreateAssetRequest:
     properties:
@@ -182,6 +229,16 @@ definitions:
       user:
         $ref: '#/definitions/presentation.UserPublic'
     type: object
+  presentation.UpdateAccountRequest:
+    properties:
+      accountType:
+        $ref: '#/definitions/account.AccountType'
+      name:
+        type: string
+    required:
+    - accountType
+    - name
+    type: object
   presentation.UpdateAssetRequest:
     properties:
       accountId:
@@ -239,120 +296,6 @@ definitions:
       lastName:
         type: string
     type: object
-  routes.AccountResponse:
-    properties:
-      accountType:
-        type: string
-      createdAt:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updatedAt:
-        type: string
-      userId:
-        type: string
-    type: object
-  routes.AccountSummaryResponse:
-    properties:
-      byCurrency:
-        additionalProperties:
-          type: number
-        type: object
-      byType:
-        additionalProperties:
-          type: integer
-        type: object
-      totalAccounts:
-        type: integer
-    type: object
-  routes.AccountWithAssetsResponse:
-    properties:
-      accountType:
-        type: string
-      assetCounts:
-        additionalProperties:
-          type: integer
-        type: object
-      assets:
-        items:
-          $ref: '#/definitions/routes.AssetInfoResponse'
-        type: array
-      createdAt:
-        type: string
-      id:
-        type: string
-      lastUpdated:
-        type: string
-      name:
-        type: string
-      totalBalances:
-        additionalProperties:
-          type: number
-        type: object
-      updatedAt:
-        type: string
-      userId:
-        type: string
-    type: object
-  routes.AccountsListResponse:
-    properties:
-      accounts:
-        items:
-          $ref: '#/definitions/routes.AccountResponse'
-        type: array
-      total:
-        type: integer
-    type: object
-  routes.AccountsWithAssetsListResponse:
-    properties:
-      accounts:
-        items:
-          $ref: '#/definitions/routes.AccountWithAssetsResponse'
-        type: array
-      total:
-        type: integer
-    type: object
-  routes.AssetInfoResponse:
-    properties:
-      currency:
-        type: string
-      definitionId:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      quantity:
-        type: number
-      symbol:
-        type: string
-      type:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  routes.CreateAccountRequest:
-    properties:
-      accountType:
-        $ref: '#/definitions/account.AccountType'
-      name:
-        type: string
-    required:
-    - accountType
-    - name
-    type: object
-  routes.UpdateAccountRequest:
-    properties:
-      accountType:
-        $ref: '#/definitions/account.AccountType'
-      name:
-        type: string
-    required:
-    - accountType
-    - name
-    type: object
   user.LoginUserCommand:
     properties:
       email:
@@ -400,13 +343,17 @@ paths:
       consumes:
       - application/json
       description: Get all accounts for the authenticated user
+      parameters:
+      - description: Include assets in response
+        in: query
+        name: with-assets
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
           description: OK
-          schema:
-            $ref: '#/definitions/routes.AccountsListResponse'
+          schema: {}
         "401":
           description: Unauthorized
           schema:
@@ -428,7 +375,7 @@ paths:
         name: account
         required: true
         schema:
-          $ref: '#/definitions/routes.CreateAccountRequest'
+          $ref: '#/definitions/presentation.CreateAccountRequest'
       produces:
       - application/json
       responses:
@@ -436,7 +383,7 @@ paths:
           description: Created
           schema:
             additionalProperties:
-              $ref: '#/definitions/routes.AccountResponse'
+              $ref: '#/definitions/presentation.AccountResponse'
             type: object
         "400":
           description: Bad Request
@@ -502,14 +449,17 @@ paths:
         name: id
         required: true
         type: string
+      - description: Include assets in response
+        in: query
+        name: with-assets
+        type: boolean
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties:
-              $ref: '#/definitions/routes.AccountResponse'
+            additionalProperties: true
             type: object
         "400":
           description: Bad Request
@@ -543,7 +493,7 @@ paths:
         name: account
         required: true
         schema:
-          $ref: '#/definitions/routes.UpdateAccountRequest'
+          $ref: '#/definitions/presentation.UpdateAccountRequest'
       produces:
       - application/json
       responses:
@@ -551,7 +501,7 @@ paths:
           description: OK
           schema:
             additionalProperties:
-              $ref: '#/definitions/routes.AccountResponse'
+              $ref: '#/definitions/presentation.AccountResponse'
             type: object
         "400":
           description: Bad Request
@@ -568,44 +518,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Update an account
-      tags:
-      - accounts
-  /accounts/{id}/with-assets:
-    get:
-      consumes:
-      - application/json
-      description: Get a specific account by ID with its assets for the authenticated
-        user
-      parameters:
-      - description: Account ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              $ref: '#/definitions/routes.AccountWithAssetsResponse'
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get account by ID with assets
       tags:
       - accounts
   /accounts/filter:
@@ -633,7 +545,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/routes.AccountsListResponse'
+            $ref: '#/definitions/presentation.AccountsListResponse'
         "401":
           description: Unauthorized
           schema:
@@ -657,7 +569,7 @@ paths:
           description: OK
           schema:
             additionalProperties:
-              $ref: '#/definitions/routes.AccountSummaryResponse'
+              $ref: '#/definitions/presentation.AccountSummaryResponse'
             type: object
         "401":
           description: Unauthorized
@@ -668,64 +580,6 @@ paths:
       security:
       - BearerAuth: []
       summary: Get account summary
-      tags:
-      - accounts
-  /accounts/type/{type}:
-    get:
-      consumes:
-      - application/json
-      description: Get all accounts of a specific type for the authenticated user
-      parameters:
-      - description: Account Type
-        in: path
-        name: type
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/routes.AccountsListResponse'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get accounts by type
-      tags:
-      - accounts
-  /accounts/with-assets:
-    get:
-      consumes:
-      - application/json
-      description: Get all accounts with their assets for the authenticated user
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/routes.AccountsWithAssetsListResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Get all user accounts with assets
       tags:
       - accounts
   /assets:

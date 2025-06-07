@@ -17,9 +17,3 @@ type DeleteAccountCommand struct {
 	ID     string `json:"id" validate:"required"`
 	UserID string `json:"userId" validate:"required"`
 }
-
-type UpdateAccountBalanceCommand struct {
-	ID     string  `json:"id" validate:"required"`
-	UserID string  `json:"userId" validate:"required"`
-	Amount float64 `json:"amount" validate:"required"`
-}

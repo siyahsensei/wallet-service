@@ -42,12 +42,18 @@ const docTemplate = `{
                     "accounts"
                 ],
                 "summary": "Get all user accounts",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Include assets in response",
+                        "name": "with-assets",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/routes.AccountsListResponse"
-                        }
+                        "schema": {}
                     },
                     "401": {
                         "description": "Unauthorized",
@@ -84,7 +90,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.CreateAccountRequest"
+                            "$ref": "#/definitions/presentation.CreateAccountRequest"
                         }
                     }
                 ],
@@ -94,7 +100,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.AccountResponse"
+                                "$ref": "#/definitions/presentation.AccountResponse"
                             }
                         }
                     },
@@ -161,7 +167,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/routes.AccountsListResponse"
+                            "$ref": "#/definitions/presentation.AccountsListResponse"
                         }
                     },
                     "401": {
@@ -200,100 +206,8 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.AccountSummaryResponse"
+                                "$ref": "#/definitions/presentation.AccountSummaryResponse"
                             }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/type/{type}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all accounts of a specific type for the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get accounts by type",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Account Type",
-                        "name": "type",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/routes.AccountsListResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/with-assets": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all accounts with their assets for the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get all user accounts with assets",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/routes.AccountsWithAssetsListResponse"
                         }
                     },
                     "401": {
@@ -333,6 +247,12 @@ const docTemplate = `{
                         "name": "id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Include assets in response",
+                        "name": "with-assets",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -340,9 +260,7 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "$ref": "#/definitions/routes.AccountResponse"
-                            }
+                            "additionalProperties": true
                         }
                     },
                     "400": {
@@ -396,7 +314,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.UpdateAccountRequest"
+                            "$ref": "#/definitions/presentation.UpdateAccountRequest"
                         }
                     }
                 ],
@@ -406,7 +324,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.AccountResponse"
+                                "$ref": "#/definitions/presentation.AccountResponse"
                             }
                         }
                     },
@@ -463,64 +381,6 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/accounts/{id}/with-assets": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get a specific account by ID with its assets for the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "accounts"
-                ],
-                "summary": "Get account by ID with assets",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Account ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "$ref": "#/definitions/routes.AccountWithAssetsResponse"
                             }
                         }
                     },
@@ -1617,6 +1477,63 @@ const docTemplate = `{
                 "Other"
             ]
         },
+        "presentation.AccountResponse": {
+            "type": "object",
+            "properties": {
+                "accountType": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.AccountSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "byCurrency": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number"
+                    }
+                },
+                "byType": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "totalAccounts": {
+                    "type": "integer"
+                }
+            }
+        },
+        "presentation.AccountsListResponse": {
+            "type": "object",
+            "properties": {
+                "accounts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presentation.AccountResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "presentation.AssetResponse": {
             "type": "object",
             "properties": {
@@ -1683,6 +1600,21 @@ const docTemplate = `{
                     "minLength": 8
                 },
                 "oldPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.CreateAccountRequest": {
+            "type": "object",
+            "required": [
+                "accountType",
+                "name"
+            ],
+            "properties": {
+                "accountType": {
+                    "$ref": "#/definitions/account.AccountType"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -1794,6 +1726,21 @@ const docTemplate = `{
                 }
             }
         },
+        "presentation.UpdateAccountRequest": {
+            "type": "object",
+            "required": [
+                "accountType",
+                "name"
+            ],
+            "properties": {
+                "accountType": {
+                    "$ref": "#/definitions/account.AccountType"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "presentation.UpdateAssetRequest": {
             "type": "object",
             "required": [
@@ -1874,180 +1821,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "lastName": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.AccountResponse": {
-            "type": "object",
-            "properties": {
-                "accountType": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.AccountSummaryResponse": {
-            "type": "object",
-            "properties": {
-                "byCurrency": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "number"
-                    }
-                },
-                "byType": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "totalAccounts": {
-                    "type": "integer"
-                }
-            }
-        },
-        "routes.AccountWithAssetsResponse": {
-            "type": "object",
-            "properties": {
-                "accountType": {
-                    "type": "string"
-                },
-                "assetCounts": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "assets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/routes.AssetInfoResponse"
-                    }
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "lastUpdated": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "totalBalances": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "number"
-                    }
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.AccountsListResponse": {
-            "type": "object",
-            "properties": {
-                "accounts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/routes.AccountResponse"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "routes.AccountsWithAssetsListResponse": {
-            "type": "object",
-            "properties": {
-                "accounts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/routes.AccountWithAssetsResponse"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "routes.AssetInfoResponse": {
-            "type": "object",
-            "properties": {
-                "currency": {
-                    "type": "string"
-                },
-                "definitionId": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "symbol": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.CreateAccountRequest": {
-            "type": "object",
-            "required": [
-                "accountType",
-                "name"
-            ],
-            "properties": {
-                "accountType": {
-                    "$ref": "#/definitions/account.AccountType"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.UpdateAccountRequest": {
-            "type": "object",
-            "required": [
-                "accountType",
-                "name"
-            ],
-            "properties": {
-                "accountType": {
-                    "$ref": "#/definitions/account.AccountType"
-                },
-                "name": {
                     "type": "string"
                 }
             }

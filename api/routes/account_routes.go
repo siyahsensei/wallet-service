@@ -2,9 +2,9 @@ package routes
 
 import (
 	"strconv"
-	"time"
 
 	"siyahsensei/wallet-service/domain/account"
+	presentation "siyahsensei/wallet-service/presentation/account"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -20,113 +20,16 @@ func NewAccountHandler(accountService *account.Handler) *AccountHandler {
 	}
 }
 
-// Request models (without Balance and CurrencyCode)
-type CreateAccountRequest struct {
-	Name        string              `json:"name" validate:"required"`
-	AccountType account.AccountType `json:"accountType" validate:"required"`
-}
+func (h *AccountHandler) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
+	accountGroup := router.Group("/accounts", authMiddleware)
 
-type UpdateAccountRequest struct {
-	Name        string              `json:"name" validate:"required"`
-	AccountType account.AccountType `json:"accountType" validate:"required"`
-}
-
-// Response models
-type AccountResponse struct {
-	ID          string    `json:"id"`
-	UserID      string    `json:"userId"`
-	Name        string    `json:"name"`
-	AccountType string    `json:"accountType"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
-}
-
-type AccountWithAssetsResponse struct {
-	ID            string              `json:"id"`
-	UserID        string              `json:"userId"`
-	Name          string              `json:"name"`
-	AccountType   string              `json:"accountType"`
-	CreatedAt     time.Time           `json:"createdAt"`
-	UpdatedAt     time.Time           `json:"updatedAt"`
-	Assets        []AssetInfoResponse `json:"assets"`
-	TotalBalances map[string]float64  `json:"totalBalances"`
-	AssetCounts   map[string]int      `json:"assetCounts"`
-	LastUpdated   *time.Time          `json:"lastUpdated"`
-}
-
-type AssetInfoResponse struct {
-	ID           string    `json:"id"`
-	DefinitionID string    `json:"definitionId"`
-	Type         string    `json:"type"`
-	Quantity     float64   `json:"quantity"`
-	Symbol       string    `json:"symbol"`
-	Name         string    `json:"name"`
-	Currency     string    `json:"currency"`
-	UpdatedAt    time.Time `json:"updatedAt"`
-}
-
-type AccountsListResponse struct {
-	Accounts []AccountResponse `json:"accounts"`
-	Total    int               `json:"total"`
-}
-
-type AccountsWithAssetsListResponse struct {
-	Accounts []AccountWithAssetsResponse `json:"accounts"`
-	Total    int                         `json:"total"`
-}
-
-type AccountSummaryResponse struct {
-	TotalAccounts int                         `json:"totalAccounts"`
-	ByType        map[account.AccountType]int `json:"byType"`
-	ByCurrency    map[string]float64          `json:"byCurrency"`
-}
-
-func toAccountResponse(a *account.Account) AccountResponse {
-	return AccountResponse{
-		ID:          a.ID.String(),
-		UserID:      a.UserID.String(),
-		Name:        a.Name,
-		AccountType: string(a.AccountType),
-		CreatedAt:   a.CreatedAt,
-		UpdatedAt:   a.UpdatedAt,
-	}
-}
-
-func toAccountWithAssetsResponse(a *account.AccountWithAssets) AccountWithAssetsResponse {
-	var assets []AssetInfoResponse
-	for _, asset := range a.Assets {
-		assets = append(assets, AssetInfoResponse{
-			ID:           asset.ID.String(),
-			DefinitionID: asset.DefinitionID.String(),
-			Type:         asset.Type,
-			Quantity:     asset.Quantity,
-			Symbol:       asset.Symbol,
-			Name:         asset.Name,
-			Currency:     asset.Currency,
-			UpdatedAt:    asset.UpdatedAt,
-		})
-	}
-
-	return AccountWithAssetsResponse{
-		ID:            a.Account.ID.String(),
-		UserID:        a.Account.UserID.String(),
-		Name:          a.Account.Name,
-		AccountType:   string(a.Account.AccountType),
-		CreatedAt:     a.Account.CreatedAt,
-		UpdatedAt:     a.Account.UpdatedAt,
-		Assets:        assets,
-		TotalBalances: a.TotalBalances,
-		AssetCounts:   a.AssetCounts,
-		LastUpdated:   a.LastUpdated,
-	}
-}
-
-func toAccountSummaryResponse(s *account.AccountSummary) AccountSummaryResponse {
-	return AccountSummaryResponse{
-		TotalAccounts: s.TotalAccounts,
-		ByType:        s.ByType,
-		ByCurrency:    s.ByCurrency,
-	}
+	accountGroup.Post("/", h.CreateAccount)
+	accountGroup.Put("/:id", h.UpdateAccount)
+	accountGroup.Delete("/:id", h.DeleteAccount)
+	accountGroup.Get("/", h.GetUserAccounts)
+	accountGroup.Get("/filter", h.FilterAccounts)
+	accountGroup.Get("/summary", h.GetAccountSummary)
+	accountGroup.Get("/:id", h.GetAccountByID)
 }
 
 // CreateAccount godoc
@@ -136,8 +39,8 @@ func toAccountSummaryResponse(s *account.AccountSummary) AccountSummaryResponse 
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param account body CreateAccountRequest true "Account creation data"
-// @Success 201 {object} map[string]AccountResponse
+// @Param account body presentation.CreateAccountRequest true "Account creation data"
+// @Success 201 {object} map[string]presentation.AccountResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Router /accounts [post]
@@ -149,14 +52,13 @@ func (h *AccountHandler) CreateAccount(c *fiber.Ctx) error {
 		})
 	}
 
-	var req CreateAccountRequest
+	var req presentation.CreateAccountRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
-	// Map request to command with UserID from JWT token
 	command := account.CreateAccountCommand{
 		UserID:      userIDValue.String(),
 		Name:        req.Name,
@@ -171,7 +73,7 @@ func (h *AccountHandler) CreateAccount(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"account": toAccountResponse(createdAccount),
+		"account": presentation.ToAccountResponse(createdAccount),
 	})
 }
 
@@ -183,8 +85,8 @@ func (h *AccountHandler) CreateAccount(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Account ID"
-// @Param account body UpdateAccountRequest true "Account update data"
-// @Success 200 {object} map[string]AccountResponse
+// @Param account body presentation.UpdateAccountRequest true "Account update data"
+// @Success 200 {object} map[string]presentation.AccountResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Router /accounts/{id} [put]
@@ -203,7 +105,7 @@ func (h *AccountHandler) UpdateAccount(c *fiber.Ctx) error {
 		})
 	}
 
-	var req UpdateAccountRequest
+	var req presentation.UpdateAccountRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
@@ -225,7 +127,7 @@ func (h *AccountHandler) UpdateAccount(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"account": toAccountResponse(updatedAccount),
+		"account": presentation.ToAccountResponse(updatedAccount),
 	})
 }
 
@@ -281,7 +183,8 @@ func (h *AccountHandler) DeleteAccount(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Account ID"
-// @Success 200 {object} map[string]AccountResponse
+// @Param with-assets query bool false "Include assets in response"
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Router /accounts/{id} [get]
@@ -305,60 +208,32 @@ func (h *AccountHandler) GetAccountByID(c *fiber.Ctx) error {
 		UserID: userIDValue.String(),
 	}
 
-	foundAccount, err := h.accountService.HandleGetAccountByIDQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+	// Check if assets should be included
+	withAssets := c.Query("with-assets") == "true"
+
+	if withAssets {
+		foundAccount, err := h.accountService.HandleGetAccountByIDWithAssetsQuery(c.Context(), query)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"account": presentation.ToAccountWithAssetsResponse(foundAccount),
+		})
+	} else {
+		foundAccount, err := h.accountService.HandleGetAccountByIDQuery(c.Context(), query)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{
+			"account": presentation.ToAccountResponse(foundAccount),
 		})
 	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"account": toAccountResponse(foundAccount),
-	})
-}
-
-// GetAccountByIDWithAssets godoc
-// @Summary Get account by ID with assets
-// @Description Get a specific account by ID with its assets for the authenticated user
-// @Tags accounts
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "Account ID"
-// @Success 200 {object} map[string]AccountWithAssetsResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /accounts/{id}/with-assets [get]
-func (h *AccountHandler) GetAccountByIDWithAssets(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	accountID := c.Params("id")
-	if accountID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Account ID is required",
-		})
-	}
-
-	query := account.GetAccountByIDQuery{
-		ID:     accountID,
-		UserID: userIDValue.String(),
-	}
-
-	foundAccount, err := h.accountService.HandleGetAccountByIDWithAssetsQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"account": toAccountWithAssetsResponse(foundAccount),
-	})
 }
 
 // GetUserAccounts godoc
@@ -368,7 +243,8 @@ func (h *AccountHandler) GetAccountByIDWithAssets(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} AccountsListResponse
+// @Param with-assets query bool false "Include assets in response"
+// @Success 200 {object} interface{}
 // @Failure 401 {object} map[string]string
 // @Router /accounts [get]
 func (h *AccountHandler) GetUserAccounts(c *fiber.Ctx) error {
@@ -383,112 +259,44 @@ func (h *AccountHandler) GetUserAccounts(c *fiber.Ctx) error {
 		UserID: userIDValue.String(),
 	}
 
-	accounts, err := h.accountService.HandleGetUserAccountsQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+	// Check if assets should be included
+	withAssets := c.Query("with-assets") == "true"
+
+	if withAssets {
+		accounts, err := h.accountService.HandleGetUserAccountsWithAssetsQuery(c.Context(), query)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		var accountResponses []presentation.AccountWithAssetsResponse
+		for _, a := range accounts {
+			accountResponses = append(accountResponses, presentation.ToAccountWithAssetsResponse(a))
+		}
+
+		return c.Status(fiber.StatusOK).JSON(presentation.AccountsWithAssetsListResponse{
+			Accounts: accountResponses,
+			Total:    len(accountResponses),
+		})
+	} else {
+		accounts, err := h.accountService.HandleGetUserAccountsQuery(c.Context(), query)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+
+		var accountResponses []presentation.AccountResponse
+		for _, a := range accounts {
+			accountResponses = append(accountResponses, presentation.ToAccountResponse(a))
+		}
+
+		return c.Status(fiber.StatusOK).JSON(presentation.AccountsListResponse{
+			Accounts: accountResponses,
+			Total:    len(accountResponses),
 		})
 	}
-
-	var accountResponses []AccountResponse
-	for _, a := range accounts {
-		accountResponses = append(accountResponses, toAccountResponse(a))
-	}
-
-	return c.Status(fiber.StatusOK).JSON(AccountsListResponse{
-		Accounts: accountResponses,
-		Total:    len(accountResponses),
-	})
-}
-
-// GetUserAccountsWithAssets godoc
-// @Summary Get all user accounts with assets
-// @Description Get all accounts with their assets for the authenticated user
-// @Tags accounts
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} AccountsWithAssetsListResponse
-// @Failure 401 {object} map[string]string
-// @Router /accounts/with-assets [get]
-func (h *AccountHandler) GetUserAccountsWithAssets(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	query := account.GetUserAccountsQuery{
-		UserID: userIDValue.String(),
-	}
-
-	accounts, err := h.accountService.HandleGetUserAccountsWithAssetsQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	var accountResponses []AccountWithAssetsResponse
-	for _, a := range accounts {
-		accountResponses = append(accountResponses, toAccountWithAssetsResponse(a))
-	}
-
-	return c.Status(fiber.StatusOK).JSON(AccountsWithAssetsListResponse{
-		Accounts: accountResponses,
-		Total:    len(accountResponses),
-	})
-}
-
-// GetAccountsByType godoc
-// @Summary Get accounts by type
-// @Description Get all accounts of a specific type for the authenticated user
-// @Tags accounts
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param type path string true "Account Type"
-// @Success 200 {object} AccountsListResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /accounts/type/{type} [get]
-func (h *AccountHandler) GetAccountsByType(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	accountType := c.Params("type")
-	if accountType == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Account type is required",
-		})
-	}
-
-	query := account.GetAccountsByTypeQuery{
-		UserID:      userIDValue.String(),
-		AccountType: account.AccountType(accountType),
-	}
-
-	accounts, err := h.accountService.HandleGetAccountsByTypeQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	var accountResponses []AccountResponse
-	for _, a := range accounts {
-		accountResponses = append(accountResponses, toAccountResponse(a))
-	}
-
-	return c.Status(fiber.StatusOK).JSON(AccountsListResponse{
-		Accounts: accountResponses,
-		Total:    len(accountResponses),
-	})
 }
 
 // FilterAccounts godoc
@@ -501,7 +309,7 @@ func (h *AccountHandler) GetAccountsByType(c *fiber.Ctx) error {
 // @Param accountType query string false "Account Type"
 // @Param limit query int false "Limit number of results"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} AccountsListResponse
+// @Success 200 {object} presentation.AccountsListResponse
 // @Failure 401 {object} map[string]string
 // @Router /accounts/filter [get]
 func (h *AccountHandler) FilterAccounts(c *fiber.Ctx) error {
@@ -540,12 +348,12 @@ func (h *AccountHandler) FilterAccounts(c *fiber.Ctx) error {
 		})
 	}
 
-	var accountResponses []AccountResponse
+	var accountResponses []presentation.AccountResponse
 	for _, a := range accounts {
-		accountResponses = append(accountResponses, toAccountResponse(a))
+		accountResponses = append(accountResponses, presentation.ToAccountResponse(a))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(AccountsListResponse{
+	return c.Status(fiber.StatusOK).JSON(presentation.AccountsListResponse{
 		Accounts: accountResponses,
 		Total:    len(accountResponses),
 	})
@@ -558,7 +366,7 @@ func (h *AccountHandler) FilterAccounts(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} map[string]AccountSummaryResponse
+// @Success 200 {object} map[string]presentation.AccountSummaryResponse
 // @Failure 401 {object} map[string]string
 // @Router /accounts/summary [get]
 func (h *AccountHandler) GetAccountSummary(c *fiber.Ctx) error {
@@ -581,21 +389,6 @@ func (h *AccountHandler) GetAccountSummary(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"summary": toAccountSummaryResponse(summary),
+		"summary": presentation.ToAccountSummaryResponse(summary),
 	})
-}
-
-func (h *AccountHandler) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
-	accountGroup := router.Group("/accounts", authMiddleware)
-
-	accountGroup.Post("/", h.CreateAccount)
-	accountGroup.Put("/:id", h.UpdateAccount)
-	accountGroup.Delete("/:id", h.DeleteAccount)
-	accountGroup.Get("/", h.GetUserAccounts)
-	accountGroup.Get("/with-assets", h.GetUserAccountsWithAssets)
-	accountGroup.Get("/filter", h.FilterAccounts)
-	accountGroup.Get("/summary", h.GetAccountSummary)
-	accountGroup.Get("/type/:type", h.GetAccountsByType)
-	accountGroup.Get("/:id", h.GetAccountByID)
-	accountGroup.Get("/:id/with-assets", h.GetAccountByIDWithAssets)
 }
