@@ -1,4 +1,4 @@
-package auth
+package presentation
 
 type TokenResponse struct {
 	Token string      `json:"token"`

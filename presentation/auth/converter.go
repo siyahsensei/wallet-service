@@ -1,4 +1,4 @@
-package auth
+package presentation
 
 import "siyahsensei/wallet-service/domain/user"
 

@@ -141,45 +141,6 @@ func (s *Handler) HandleGetUserAssetsQuery(ctx context.Context, query GetUserAss
 	return s.repo.GetByUserID(ctx, userID)
 }
 
-func (s *Handler) HandleGetAccountAssetsQuery(ctx context.Context, query GetAccountAssetsQuery) ([]*Asset, error) {
-	accountID, err := uuid.Parse(query.AccountID)
-	if err != nil {
-		return nil, errors.New("invalid account ID")
-	}
-
-	userID, err := uuid.Parse(query.UserID)
-	if err != nil {
-		return nil, errors.New("invalid user ID")
-	}
-
-	assets, err := s.repo.GetByAccountID(ctx, accountID)
-	if err != nil {
-		return nil, err
-	}
-
-	var userAssets []*Asset
-	for _, asset := range assets {
-		if asset.UserID == userID {
-			userAssets = append(userAssets, asset)
-		}
-	}
-
-	return userAssets, nil
-}
-
-func (s *Handler) HandleGetAssetsByTypeQuery(ctx context.Context, query GetAssetsByTypeQuery) ([]*Asset, error) {
-	if !isValidAssetType(query.AssetType) {
-		return nil, errors.New("invalid asset type")
-	}
-
-	userID, err := uuid.Parse(query.UserID)
-	if err != nil {
-		return nil, errors.New("invalid user ID")
-	}
-
-	return s.repo.GetByType(ctx, userID, query.AssetType)
-}
-
 func (s *Handler) HandleFilterAssetsQuery(ctx context.Context, query FilterAssetsQuery) ([]*Asset, error) {
 	userID, err := uuid.Parse(query.UserID)
 	if err != nil {
@@ -206,24 +167,6 @@ func (s *Handler) HandleFilterAssetsQuery(ctx context.Context, query FilterAsset
 	}
 
 	return filteredAssets, nil
-}
-
-func (s *Handler) HandleGetAssetPerformanceQuery(ctx context.Context, query GetAssetPerformanceQuery) ([]*AssetPerformance, error) {
-	userID, err := uuid.Parse(query.UserID)
-	if err != nil {
-		return nil, errors.New("invalid user ID")
-	}
-
-	return s.repo.GetAssetPerformance(ctx, userID, query.StartDate, query.EndDate)
-}
-
-func (s *Handler) HandleGetTotalValueQuery(ctx context.Context, query GetTotalValueQuery) (float64, error) {
-	userID, err := uuid.Parse(query.UserID)
-	if err != nil {
-		return 0, errors.New("invalid user ID")
-	}
-
-	return s.repo.GetTotalValue(ctx, userID, query.AssetTypes)
 }
 
 func (s *Handler) matchesFilter(asset *Asset, query FilterAssetsQuery) bool {
@@ -255,52 +198,6 @@ func (s *Handler) matchesFilter(asset *Asset, query FilterAssetsQuery) bool {
 	}
 
 	return true
-}
-
-func (s *Handler) CreateAsset(ctx context.Context, command CreateAssetCommand) (*Asset, error) {
-	return s.HandleCreateAssetCommand(ctx, command)
-}
-
-func (s *Handler) GetAssetByID(ctx context.Context, id uuid.UUID) (*Asset, error) {
-	return s.repo.GetByID(ctx, id)
-}
-
-func (s *Handler) GetUserAssets(ctx context.Context, userID uuid.UUID) ([]*Asset, error) {
-	return s.repo.GetByUserID(ctx, userID)
-}
-
-func (s *Handler) GetAccountAssets(ctx context.Context, accountID uuid.UUID) ([]*Asset, error) {
-	return s.repo.GetByAccountID(ctx, accountID)
-}
-
-func (s *Handler) GetAssetsByType(ctx context.Context, userID uuid.UUID, assetType AssetType) ([]*Asset, error) {
-	if !isValidAssetType(assetType) {
-		return nil, errors.New("invalid asset type")
-	}
-
-	return s.repo.GetByType(ctx, userID, assetType)
-}
-
-func (s *Handler) UpdateAsset(ctx context.Context, asset *Asset) error {
-	if !isValidAssetType(asset.Type) {
-		return errors.New("invalid asset type")
-	}
-	if asset.Quantity <= 0 {
-		return errors.New("quantity must be greater than zero")
-	}
-	_, err := s.repo.GetByID(ctx, asset.ID)
-	if err != nil {
-		return errors.New("asset not found")
-	}
-	return s.repo.Update(ctx, asset)
-}
-
-func (s *Handler) DeleteAsset(ctx context.Context, id uuid.UUID) error {
-	_, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return errors.New("asset not found")
-	}
-	return s.repo.Delete(ctx, id)
 }
 
 func isValidAssetType(t AssetType) bool {

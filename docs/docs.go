@@ -567,7 +567,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/routes.AssetsListResponse"
+                            "$ref": "#/definitions/presentation.AssetsListResponse"
                         }
                     },
                     "401": {
@@ -605,7 +605,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.CreateAssetRequest"
+                            "$ref": "#/definitions/presentation.CreateAssetRequest"
                         }
                     }
                 ],
@@ -615,63 +615,8 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.AssetResponse"
+                                "$ref": "#/definitions/presentation.AssetResponse"
                             }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/assets/account/{accountId}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all assets for a specific account of the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get assets by account",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Account ID",
-                        "name": "accountId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/routes.AssetsListResponse"
                         }
                     },
                     "400": {
@@ -767,170 +712,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/routes.AssetsListResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/assets/performance": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get performance data for assets within a date range for the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get asset performance",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start Date (RFC3339)",
-                        "name": "startDate",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End Date (RFC3339)",
-                        "name": "endDate",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/assets/total-value": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get total value of assets for the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get total asset value",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Asset Types (comma separated)",
-                        "name": "assetTypes",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/routes.TotalValueResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/assets/type/{type}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get all assets of a specific type for the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get assets by type",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Asset Type",
-                        "name": "type",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/routes.AssetsListResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/presentation.AssetsListResponse"
                         }
                     },
                     "401": {
@@ -978,7 +760,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.AssetResponse"
+                                "$ref": "#/definitions/presentation.AssetResponse"
                             }
                         }
                     },
@@ -1042,7 +824,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.UpdateAssetRequest"
+                            "$ref": "#/definitions/presentation.UpdateAssetRequest"
                         }
                     }
                 ],
@@ -1052,7 +834,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.AssetResponse"
+                                "$ref": "#/definitions/presentation.AssetResponse"
                             }
                         }
                     },
@@ -1170,7 +952,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.ChangePasswordRequest"
+                            "$ref": "#/definitions/presentation.ChangePasswordRequest"
                         }
                     }
                 ],
@@ -1233,7 +1015,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/routes.TokenResponse"
+                            "$ref": "#/definitions/presentation.TokenResponse"
                         }
                     },
                     "401": {
@@ -1272,7 +1054,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.UserPublic"
+                                "$ref": "#/definitions/presentation.UserPublic"
                             }
                         }
                     },
@@ -1311,7 +1093,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.UpdateUserRequest"
+                            "$ref": "#/definitions/presentation.UpdateUserRequest"
                         }
                     }
                 ],
@@ -1321,7 +1103,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
-                                "$ref": "#/definitions/routes.UserPublic"
+                                "$ref": "#/definitions/presentation.UserPublic"
                             }
                         }
                     },
@@ -1369,7 +1151,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/routes.DeleteUserRequest"
+                            "$ref": "#/definitions/presentation.DeleteUserRequest"
                         }
                     }
                 ],
@@ -1423,7 +1205,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/routes.TokenResponse"
+                            "$ref": "#/definitions/presentation.TokenResponse"
                         }
                     },
                     "400": {
@@ -1835,6 +1617,106 @@ const docTemplate = `{
                 "Other"
             ]
         },
+        "presentation.AssetResponse": {
+            "type": "object",
+            "properties": {
+                "accountId": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "definitionId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "purchaseDate": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.AssetsListResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/presentation.AssetResponse"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "presentation.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "confirmPassword",
+                "newPassword",
+                "oldPassword"
+            ],
+            "properties": {
+                "confirmPassword": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "newPassword": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "oldPassword": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.CreateAssetRequest": {
+            "type": "object",
+            "required": [
+                "accountId",
+                "definitionId",
+                "purchaseDate",
+                "quantity",
+                "type"
+            ],
+            "properties": {
+                "accountId": {
+                    "type": "string"
+                },
+                "definitionId": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "purchaseDate": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "type": {
+                    "$ref": "#/definitions/asset.AssetType"
+                }
+            }
+        },
         "presentation.CreateDefinitionRequest": {
             "type": "object",
             "required": [
@@ -1890,6 +1772,58 @@ const docTemplate = `{
                 }
             }
         },
+        "presentation.DeleteUserRequest": {
+            "type": "object",
+            "required": [
+                "password"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/presentation.UserPublic"
+                }
+            }
+        },
+        "presentation.UpdateAssetRequest": {
+            "type": "object",
+            "required": [
+                "accountId",
+                "definitionId",
+                "purchaseDate",
+                "quantity",
+                "type"
+            ],
+            "properties": {
+                "accountId": {
+                    "type": "string"
+                },
+                "definitionId": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "purchaseDate": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "type": {
+                    "$ref": "#/definitions/asset.AssetType"
+                }
+            }
+        },
         "presentation.UpdateDefinitionRequest": {
             "type": "object",
             "required": [
@@ -1904,6 +1838,42 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "suffix": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.UpdateUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "firstName",
+                "lastName"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                }
+            }
+        },
+        "presentation.UserPublic": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastName": {
                     "type": "string"
                 }
             }
@@ -2052,76 +2022,6 @@ const docTemplate = `{
                 }
             }
         },
-        "routes.AssetResponse": {
-            "type": "object",
-            "properties": {
-                "accountId": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "definitionId": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "purchaseDate": {
-                    "type": "string"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "userId": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.AssetsListResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/routes.AssetResponse"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "routes.ChangePasswordRequest": {
-            "type": "object",
-            "required": [
-                "confirmPassword",
-                "newPassword",
-                "oldPassword"
-            ],
-            "properties": {
-                "confirmPassword": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "newPassword": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "oldPassword": {
-                    "type": "string"
-                }
-            }
-        },
         "routes.CreateAccountRequest": {
             "type": "object",
             "required": [
@@ -2137,66 +2037,6 @@ const docTemplate = `{
                 }
             }
         },
-        "routes.CreateAssetRequest": {
-            "type": "object",
-            "required": [
-                "accountId",
-                "definitionId",
-                "purchaseDate",
-                "quantity",
-                "type"
-            ],
-            "properties": {
-                "accountId": {
-                    "type": "string"
-                },
-                "definitionId": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "purchaseDate": {
-                    "type": "integer"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "type": {
-                    "$ref": "#/definitions/asset.AssetType"
-                }
-            }
-        },
-        "routes.DeleteUserRequest": {
-            "type": "object",
-            "required": [
-                "password"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.TokenResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/routes.UserPublic"
-                }
-            }
-        },
-        "routes.TotalValueResponse": {
-            "type": "object",
-            "properties": {
-                "totalValue": {
-                    "type": "number"
-                }
-            }
-        },
         "routes.UpdateAccountRequest": {
             "type": "object",
             "required": [
@@ -2208,72 +2048,6 @@ const docTemplate = `{
                     "$ref": "#/definitions/account.AccountType"
                 },
                 "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.UpdateAssetRequest": {
-            "type": "object",
-            "required": [
-                "accountId",
-                "definitionId",
-                "purchaseDate",
-                "quantity",
-                "type"
-            ],
-            "properties": {
-                "accountId": {
-                    "type": "string"
-                },
-                "definitionId": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "purchaseDate": {
-                    "type": "integer"
-                },
-                "quantity": {
-                    "type": "number"
-                },
-                "type": {
-                    "$ref": "#/definitions/asset.AssetType"
-                }
-            }
-        },
-        "routes.UpdateUserRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "firstName",
-                "lastName"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                }
-            }
-        },
-        "routes.UserPublic": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "lastName": {
                     "type": "string"
                 }
             }

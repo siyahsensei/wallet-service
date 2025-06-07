@@ -27,7 +27,6 @@ func NewHandler(repo Repository, jwtSecret string, tokenExpiry time.Duration) *H
 	}
 }
 
-// Command Handlers
 func (s *Handler) HandleRegisterUserCommand(ctx context.Context, command RegisterUserCommand) (*User, error) {
 	existingUser, err := s.repo.GetByEmail(ctx, command.Email)
 	if err == nil && existingUser != nil {
@@ -136,7 +135,6 @@ func (s *Handler) HandleValidateUserPasswordCommand(ctx context.Context, command
 	return user.ComparePassword(command.Password)
 }
 
-// Query Handlers
 func (s *Handler) HandleGetUserByIDQuery(ctx context.Context, query GetUserByIDQuery) (*User, error) {
 	userID, err := uuid.Parse(query.ID)
 	if err != nil {
@@ -152,73 +150,6 @@ func (s *Handler) HandleGetUserByEmailQuery(ctx context.Context, query GetUserBy
 
 func (s *Handler) HandleListUsersQuery(ctx context.Context, query ListUsersQuery) ([]*User, error) {
 	return s.repo.List(ctx, query.Offset, query.Limit)
-}
-
-// Legacy methods for backward compatibility (will be deprecated)
-func (s *Handler) RegisterUser(ctx context.Context, email, password, firstName, lastName string) (*User, error) {
-	command := RegisterUserCommand{
-		Email:     email,
-		Password:  password,
-		FirstName: firstName,
-		LastName:  lastName,
-	}
-	return s.HandleRegisterUserCommand(ctx, command)
-}
-
-func (s *Handler) LoginUser(ctx context.Context, email, password string) (*User, error) {
-	command := LoginUserCommand{
-		Email:    email,
-		Password: password,
-	}
-	return s.HandleLoginUserCommand(ctx, command)
-}
-
-func (s *Handler) GetUserByID(ctx context.Context, id uuid.UUID) (*User, error) {
-	query := GetUserByIDQuery{
-		ID: id.String(),
-	}
-	return s.HandleGetUserByIDQuery(ctx, query)
-}
-
-func (s *Handler) GetUserByEmail(ctx context.Context, email string) (*User, error) {
-	query := GetUserByEmailQuery{
-		Email: email,
-	}
-	return s.HandleGetUserByEmailQuery(ctx, query)
-}
-
-func (s *Handler) UpdateUser(ctx context.Context, user *User) error {
-	command := UpdateUserCommand{
-		ID:        user.ID.String(),
-		Email:     user.Email,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-	}
-	_, err := s.HandleUpdateUserCommand(ctx, command)
-	return err
-}
-
-func (s *Handler) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
-	command := ChangePasswordCommand{
-		UserID:      userID.String(),
-		OldPassword: oldPassword,
-		NewPassword: newPassword,
-	}
-	return s.HandleChangePasswordCommand(ctx, command)
-}
-
-func (s *Handler) DeleteUser(ctx context.Context, userID uuid.UUID) error {
-	// Note: This method doesn't validate password, which might be a security issue
-	// For proper deletion, use HandleDeleteUserCommand instead
-	return s.repo.Delete(ctx, userID)
-}
-
-func (s *Handler) ValidateUserPassword(ctx context.Context, userID uuid.UUID, password string) error {
-	command := ValidateUserPasswordCommand{
-		UserID:   userID.String(),
-		Password: password,
-	}
-	return s.HandleValidateUserPasswordCommand(ctx, command)
 }
 
 func (s *Handler) GetTokenExpiry() time.Duration {

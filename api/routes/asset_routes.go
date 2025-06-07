@@ -4,10 +4,10 @@ import (
 	"strconv"
 	"time"
 
-	"siyahsensei/wallet-service/domain/asset"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"siyahsensei/wallet-service/domain/asset"
+	presentation "siyahsensei/wallet-service/presentation/asset"
 )
 
 type AssetHandler struct {
@@ -20,87 +20,15 @@ func NewAssetHandler(assetService *asset.Handler) *AssetHandler {
 	}
 }
 
-// Request models (without UserID for security)
-type CreateAssetRequest struct {
-	AccountID    string          `json:"accountId" validate:"required"`
-	DefinitionID string          `json:"definitionId" validate:"required"`
-	Type         asset.AssetType `json:"type" validate:"required"`
-	Quantity     float64         `json:"quantity" validate:"required"`
-	Notes        string          `json:"notes"`
-	PurchaseDate int64           `json:"purchaseDate" validate:"required"`
-}
+func (h *AssetHandler) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
+	assetGroup := router.Group("/assets", authMiddleware)
 
-type UpdateAssetRequest struct {
-	AccountID    string          `json:"accountId" validate:"required"`
-	DefinitionID string          `json:"definitionId" validate:"required"`
-	Type         asset.AssetType `json:"type" validate:"required"`
-	Quantity     float64         `json:"quantity" validate:"required"`
-	Notes        string          `json:"notes"`
-	PurchaseDate int64           `json:"purchaseDate" validate:"required"`
-}
-
-// Response models
-type AssetResponse struct {
-	ID           string    `json:"id"`
-	UserID       string    `json:"userId"`
-	AccountID    string    `json:"accountId"`
-	DefinitionID string    `json:"definitionId"`
-	Type         string    `json:"type"`
-	Quantity     float64   `json:"quantity"`
-	Notes        string    `json:"notes"`
-	PurchaseDate time.Time `json:"purchaseDate"`
-	CreatedAt    time.Time `json:"createdAt"`
-	UpdatedAt    time.Time `json:"updatedAt"`
-}
-
-type AssetsListResponse struct {
-	Assets []AssetResponse `json:"assets"`
-	Total  int             `json:"total"`
-}
-
-type AssetPerformanceResponse struct {
-	AssetID        string  `json:"assetId"`
-	Name           string  `json:"name"`
-	Symbol         string  `json:"symbol"`
-	Type           string  `json:"type"`
-	InitialValue   float64 `json:"initialValue"`
-	CurrentValue   float64 `json:"currentValue"`
-	ProfitLoss     float64 `json:"profitLoss"`
-	ProfitLossPerc float64 `json:"profitLossPercentage"`
-	Currency       string  `json:"currency"`
-}
-
-type TotalValueResponse struct {
-	TotalValue float64 `json:"totalValue"`
-}
-
-func toAssetResponse(a *asset.Asset) AssetResponse {
-	return AssetResponse{
-		ID:           a.ID.String(),
-		UserID:       a.UserID.String(),
-		AccountID:    a.AccountID.String(),
-		DefinitionID: a.DefinitionID.String(),
-		Type:         string(a.Type),
-		Quantity:     a.Quantity,
-		Notes:        a.Notes,
-		PurchaseDate: a.PurchaseDate,
-		CreatedAt:    a.CreatedAt,
-		UpdatedAt:    a.UpdatedAt,
-	}
-}
-
-func toAssetPerformanceResponse(ap *asset.AssetPerformance) AssetPerformanceResponse {
-	return AssetPerformanceResponse{
-		AssetID:        ap.AssetID.String(),
-		Name:           ap.Name,
-		Symbol:         ap.Symbol,
-		Type:           string(ap.Type),
-		InitialValue:   ap.InitialValue,
-		CurrentValue:   ap.CurrentValue,
-		ProfitLoss:     ap.ProfitLoss,
-		ProfitLossPerc: ap.ProfitLossPerc,
-		Currency:       ap.Currency,
-	}
+	assetGroup.Post("/", h.CreateAsset)
+	assetGroup.Put("/:id", h.UpdateAsset)
+	assetGroup.Delete("/:id", h.DeleteAsset)
+	assetGroup.Get("/", h.GetUserAssets)
+	assetGroup.Get("/filter", h.FilterAssets)
+	assetGroup.Get("/:id", h.GetAssetByID)
 }
 
 // CreateAsset godoc
@@ -110,8 +38,8 @@ func toAssetPerformanceResponse(ap *asset.AssetPerformance) AssetPerformanceResp
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param asset body CreateAssetRequest true "Asset creation data"
-// @Success 201 {object} map[string]AssetResponse
+// @Param asset body presentation.CreateAssetRequest true "Asset creation data"
+// @Success 201 {object} map[string]presentation.AssetResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Router /assets [post]
@@ -123,7 +51,7 @@ func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 		})
 	}
 
-	var req CreateAssetRequest
+	var req presentation.CreateAssetRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
@@ -149,7 +77,7 @@ func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"asset": toAssetResponse(createdAsset),
+		"asset": presentation.ToAssetResponse(createdAsset),
 	})
 }
 
@@ -161,8 +89,8 @@ func (h *AssetHandler) CreateAsset(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Asset ID"
-// @Param asset body UpdateAssetRequest true "Asset update data"
-// @Success 200 {object} map[string]AssetResponse
+// @Param asset body presentation.UpdateAssetRequest true "Asset update data"
+// @Success 200 {object} map[string]presentation.AssetResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
@@ -182,7 +110,7 @@ func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {
 		})
 	}
 
-	var req UpdateAssetRequest
+	var req presentation.UpdateAssetRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
@@ -219,7 +147,7 @@ func (h *AssetHandler) UpdateAsset(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"asset": toAssetResponse(updatedAsset),
+		"asset": presentation.ToAssetResponse(updatedAsset),
 	})
 }
 
@@ -284,7 +212,7 @@ func (h *AssetHandler) DeleteAsset(c *fiber.Ctx) error {
 // @Produce json
 // @Security BearerAuth
 // @Param id path string true "Asset ID"
-// @Success 200 {object} map[string]AssetResponse
+// @Success 200 {object} map[string]presentation.AssetResponse
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Failure 404 {object} map[string]string
@@ -322,7 +250,7 @@ func (h *AssetHandler) GetAssetByID(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"asset": toAssetResponse(foundAsset),
+		"asset": presentation.ToAssetResponse(foundAsset),
 	})
 }
 
@@ -333,7 +261,7 @@ func (h *AssetHandler) GetAssetByID(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} AssetsListResponse
+// @Success 200 {object} presentation.AssetsListResponse
 // @Failure 401 {object} map[string]string
 // @Router /assets [get]
 func (h *AssetHandler) GetUserAssets(c *fiber.Ctx) error {
@@ -355,112 +283,12 @@ func (h *AssetHandler) GetUserAssets(c *fiber.Ctx) error {
 		})
 	}
 
-	var assetResponses []AssetResponse
+	var assetResponses []presentation.AssetResponse
 	for _, a := range assets {
-		assetResponses = append(assetResponses, toAssetResponse(a))
+		assetResponses = append(assetResponses, presentation.ToAssetResponse(a))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(AssetsListResponse{
-		Assets: assetResponses,
-		Total:  len(assetResponses),
-	})
-}
-
-// GetAccountAssets godoc
-// @Summary Get assets by account
-// @Description Get all assets for a specific account of the authenticated user
-// @Tags assets
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param accountId path string true "Account ID"
-// @Success 200 {object} AssetsListResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /assets/account/{accountId} [get]
-func (h *AssetHandler) GetAccountAssets(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	accountID := c.Params("accountId")
-	if accountID == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Account ID is required",
-		})
-	}
-
-	query := asset.GetAccountAssetsQuery{
-		AccountID: accountID,
-		UserID:    userIDValue.String(),
-	}
-
-	assets, err := h.assetService.HandleGetAccountAssetsQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	var assetResponses []AssetResponse
-	for _, a := range assets {
-		assetResponses = append(assetResponses, toAssetResponse(a))
-	}
-
-	return c.Status(fiber.StatusOK).JSON(AssetsListResponse{
-		Assets: assetResponses,
-		Total:  len(assetResponses),
-	})
-}
-
-// GetAssetsByType godoc
-// @Summary Get assets by type
-// @Description Get all assets of a specific type for the authenticated user
-// @Tags assets
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param type path string true "Asset Type"
-// @Success 200 {object} AssetsListResponse
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /assets/type/{type} [get]
-func (h *AssetHandler) GetAssetsByType(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	assetType := c.Params("type")
-	if assetType == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Asset type is required",
-		})
-	}
-
-	query := asset.GetAssetsByTypeQuery{
-		UserID:    userIDValue.String(),
-		AssetType: asset.AssetType(assetType),
-	}
-
-	assets, err := h.assetService.HandleGetAssetsByTypeQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	var assetResponses []AssetResponse
-	for _, a := range assets {
-		assetResponses = append(assetResponses, toAssetResponse(a))
-	}
-
-	return c.Status(fiber.StatusOK).JSON(AssetsListResponse{
+	return c.Status(fiber.StatusOK).JSON(presentation.AssetsListResponse{
 		Assets: assetResponses,
 		Total:  len(assetResponses),
 	})
@@ -481,7 +309,7 @@ func (h *AssetHandler) GetAssetsByType(c *fiber.Ctx) error {
 // @Param createdTo query string false "Created To Date (RFC3339)"
 // @Param limit query int false "Limit number of results"
 // @Param offset query int false "Offset for pagination"
-// @Success 200 {object} AssetsListResponse
+// @Success 200 {object} presentation.AssetsListResponse
 // @Failure 401 {object} map[string]string
 // @Router /assets/filter [get]
 func (h *AssetHandler) FilterAssets(c *fiber.Ctx) error {
@@ -548,135 +376,13 @@ func (h *AssetHandler) FilterAssets(c *fiber.Ctx) error {
 		})
 	}
 
-	var assetResponses []AssetResponse
+	var assetResponses []presentation.AssetResponse
 	for _, a := range assets {
-		assetResponses = append(assetResponses, toAssetResponse(a))
+		assetResponses = append(assetResponses, presentation.ToAssetResponse(a))
 	}
 
-	return c.Status(fiber.StatusOK).JSON(AssetsListResponse{
+	return c.Status(fiber.StatusOK).JSON(presentation.AssetsListResponse{
 		Assets: assetResponses,
 		Total:  len(assetResponses),
 	})
-}
-
-// GetAssetPerformance godoc
-// @Summary Get asset performance
-// @Description Get performance data for assets within a date range for the authenticated user
-// @Tags assets
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param startDate query string true "Start Date (RFC3339)"
-// @Param endDate query string true "End Date (RFC3339)"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]string
-// @Failure 401 {object} map[string]string
-// @Router /assets/performance [get]
-func (h *AssetHandler) GetAssetPerformance(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	startDateStr := c.Query("startDate")
-	endDateStr := c.Query("endDate")
-
-	if startDateStr == "" || endDateStr == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Start date and end date are required",
-		})
-	}
-
-	startDate, err := time.Parse(time.RFC3339, startDateStr)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid start date format. Use RFC3339 format",
-		})
-	}
-
-	endDate, err := time.Parse(time.RFC3339, endDateStr)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid end date format. Use RFC3339 format",
-		})
-	}
-
-	query := asset.GetAssetPerformanceQuery{
-		UserID:    userIDValue.String(),
-		StartDate: startDate,
-		EndDate:   endDate,
-	}
-
-	performances, err := h.assetService.HandleGetAssetPerformanceQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	var performanceResponses []AssetPerformanceResponse
-	for _, p := range performances {
-		performanceResponses = append(performanceResponses, toAssetPerformanceResponse(p))
-	}
-
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"performances": performanceResponses,
-		"total":        len(performanceResponses),
-	})
-}
-
-// GetTotalValue godoc
-// @Summary Get total asset value
-// @Description Get total value of assets for the authenticated user
-// @Tags assets
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param assetTypes query string false "Asset Types (comma separated)"
-// @Success 200 {object} TotalValueResponse
-// @Failure 401 {object} map[string]string
-// @Router /assets/total-value [get]
-func (h *AssetHandler) GetTotalValue(c *fiber.Ctx) error {
-	userIDValue, ok := c.Locals("userID").(uuid.UUID)
-	if !ok {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized",
-		})
-	}
-
-	query := asset.GetTotalValueQuery{
-		UserID: userIDValue.String(),
-	}
-
-	if assetTypesStr := c.Query("assetTypes"); assetTypesStr != "" {
-		query.AssetTypes = []asset.AssetType{asset.AssetType(assetTypesStr)}
-	}
-
-	totalValue, err := h.assetService.HandleGetTotalValueQuery(c.Context(), query)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(TotalValueResponse{
-		TotalValue: totalValue,
-	})
-}
-
-func (h *AssetHandler) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
-	assetGroup := router.Group("/assets", authMiddleware)
-
-	assetGroup.Post("/", h.CreateAsset)
-	assetGroup.Put("/:id", h.UpdateAsset)
-	assetGroup.Delete("/:id", h.DeleteAsset)
-	assetGroup.Get("/", h.GetUserAssets)
-	assetGroup.Get("/filter", h.FilterAssets)
-	assetGroup.Get("/performance", h.GetAssetPerformance)
-	assetGroup.Get("/total-value", h.GetTotalValue)
-	assetGroup.Get("/account/:accountId", h.GetAccountAssets)
-	assetGroup.Get("/type/:type", h.GetAssetsByType)
-	assetGroup.Get("/:id", h.GetAssetByID)
 }

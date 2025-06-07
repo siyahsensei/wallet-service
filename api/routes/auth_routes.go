@@ -38,7 +38,7 @@ func (h *AuthRoute) RegisterRoutes(router fiber.Router, authMiddleware fiber.Han
 // @Accept json
 // @Produce json
 // @Param user body user.RegisterUserCommand true "User registration data"
-// @Success 201 {object} TokenResponse
+// @Success 201 {object} presentation.TokenResponse
 // @Failure 400 {object} map[string]string
 // @Router /auth/register [post]
 func (h *AuthRoute) Register(c *fiber.Ctx) error {
@@ -76,7 +76,7 @@ func (h *AuthRoute) Register(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param credentials body user.LoginUserCommand true "User login credentials"
-// @Success 200 {object} TokenResponse
+// @Success 200 {object} presentation.TokenResponse
 // @Failure 401 {object} map[string]string
 // @Router /auth/login [post]
 func (h *AuthRoute) Login(c *fiber.Ctx) error {
@@ -114,7 +114,7 @@ func (h *AuthRoute) Login(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} map[string]UserPublic
+// @Success 200 {object} map[string]presentation.UserPublic
 // @Failure 401 {object} map[string]string
 // @Router /auth/me [get]
 func (h *AuthRoute) Me(c *fiber.Ctx) error {
@@ -148,8 +148,8 @@ func (h *AuthRoute) Me(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param user body UpdateUserRequest true "User update data"
-// @Success 200 {object} map[string]UserPublic
+// @Param user body presentation.UpdateUserRequest true "User update data"
+// @Success 200 {object} map[string]presentation.UserPublic
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Router /auth/me [put]
@@ -194,7 +194,7 @@ func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param passwords body ChangePasswordRequest true "Password change data"
+// @Param passwords body presentation.ChangePasswordRequest true "Password change data"
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 401 {object} map[string]string
@@ -239,7 +239,7 @@ func (h *AuthRoute) ChangePassword(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param password body DeleteUserRequest true "Password confirmation"
+// @Param password body presentation.DeleteUserRequest true "Password confirmation"
 // @Success 200 {object} map[string]string
 // @Failure 401 {object} map[string]string
 // @Router /auth/me [delete]
