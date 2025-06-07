@@ -118,7 +118,7 @@ func main() {
 	assetHandler := routes.NewAssetHandler(assetService)
 
 	api := app.Group("/api")
-	authRoute.RegisterRoutes(api.Group("/auth"), jwtMiddleware.Middleware())
+	authRoute.RegisterRoutes(api, jwtMiddleware.Middleware())
 	definitionHandler.RegisterRoutes(api)
 	accountHandler.RegisterRoutes(api, jwtMiddleware.Middleware())
 	assetHandler.RegisterRoutes(api, jwtMiddleware.Middleware())

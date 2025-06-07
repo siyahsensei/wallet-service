@@ -21,12 +21,14 @@ func NewAuthRoute(userService *user.Handler, jwtAuth *auth.JWTMiddleware) *AuthR
 }
 
 func (h *AuthRoute) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
-	router.Post("/register", h.Register)
-	router.Post("/login", h.Login)
-	router.Get("/me", authMiddleware, h.Me)
-	router.Put("/me", authMiddleware, h.UpdateUser)
-	router.Put("/change-password", authMiddleware, h.ChangePassword)
-	router.Delete("/me", authMiddleware, h.DeleteUser)
+	authGroup := router.Group("/auth")
+
+	authGroup.Post("/register", h.Register)
+	authGroup.Post("/login", h.Login)
+	authGroup.Get("/me", authMiddleware, h.Me)
+	authGroup.Put("/me", authMiddleware, h.UpdateUser)
+	authGroup.Put("/change-password", authMiddleware, h.ChangePassword)
+	authGroup.Delete("/me", authMiddleware, h.DeleteUser)
 }
 
 // Register godoc
