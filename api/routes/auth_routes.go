@@ -3,7 +3,7 @@ package routes
 import (
 	"siyahsensei/wallet-service/domain/user"
 	"siyahsensei/wallet-service/infrastructure/configuration/auth"
-
+	presentation "siyahsensei/wallet-service/presentation/auth"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 )
@@ -20,41 +20,13 @@ func NewAuthRoute(userService *user.Handler, jwtAuth *auth.JWTMiddleware) *AuthR
 	}
 }
 
-type TokenResponse struct {
-	Token string      `json:"token"`
-	User  *UserPublic `json:"user"`
-}
-
-type UserPublic struct {
-	ID        string `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-}
-
-type UpdateUserRequest struct {
-	Email     string `json:"email" validate:"required,email"`
-	FirstName string `json:"firstName" validate:"required"`
-	LastName  string `json:"lastName" validate:"required"`
-}
-
-type ChangePasswordRequest struct {
-	OldPassword     string `json:"oldPassword" validate:"required"`
-	NewPassword     string `json:"newPassword" validate:"required,min=8"`
-	ConfirmPassword string `json:"confirmPassword" validate:"required,min=8"`
-}
-
-type DeleteUserRequest struct {
-	Password string `json:"password" validate:"required"`
-}
-
-func toPublicUser(u *user.User) *UserPublic {
-	return &UserPublic{
-		ID:        u.ID.String(),
-		Email:     u.Email,
-		FirstName: u.FirstName,
-		LastName:  u.LastName,
-	}
+func (h *AuthRoute) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
+	router.Post("/register", h.Register)
+	router.Post("/login", h.Login)
+	router.Get("/me", authMiddleware, h.Me)
+	router.Put("/me", authMiddleware, h.UpdateUser)
+	router.Put("/change-password", authMiddleware, h.ChangePassword)
+	router.Delete("/me", authMiddleware, h.DeleteUser)
 }
 
 // Register godoc
@@ -89,9 +61,9 @@ func (h *AuthRoute) Register(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(TokenResponse{
+	return c.Status(fiber.StatusCreated).JSON(presentation.TokenResponse{
 		Token: token,
-		User:  toPublicUser(newUser),
+		User:  presentation.ToPublicUser(newUser),
 	})
 }
 
@@ -113,7 +85,6 @@ func (h *AuthRoute) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// Validate credentials using user service
 	userInfo, err := h.userService.HandleLoginUserCommand(c.Context(), command)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -121,7 +92,6 @@ func (h *AuthRoute) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// Generate token using auth middleware
 	token, err := h.jwtAuth.GenerateToken(userInfo.ID, userInfo.Email, h.userService.GetTokenExpiry())
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -129,9 +99,9 @@ func (h *AuthRoute) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(TokenResponse{
+	return c.Status(fiber.StatusOK).JSON(presentation.TokenResponse{
 		Token: token,
-		User:  toPublicUser(userInfo),
+		User:  presentation.ToPublicUser(userInfo),
 	})
 }
 
@@ -165,7 +135,7 @@ func (h *AuthRoute) Me(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"user": toPublicUser(userInfo),
+		"user": presentation.ToPublicUser(userInfo),
 	})
 }
 
@@ -182,7 +152,7 @@ func (h *AuthRoute) Me(c *fiber.Ctx) error {
 // @Failure 401 {object} map[string]string
 // @Router /auth/me [put]
 func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
-	var req UpdateUserRequest
+	var req presentation.UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
@@ -211,7 +181,7 @@ func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"user": toPublicUser(updatedUser),
+		"user": presentation.ToPublicUser(updatedUser),
 	})
 }
 
@@ -228,7 +198,7 @@ func (h *AuthRoute) UpdateUser(c *fiber.Ctx) error {
 // @Failure 401 {object} map[string]string
 // @Router /auth/change-password [put]
 func (h *AuthRoute) ChangePassword(c *fiber.Ctx) error {
-	var req ChangePasswordRequest
+	var req presentation.ChangePasswordRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
@@ -272,7 +242,7 @@ func (h *AuthRoute) ChangePassword(c *fiber.Ctx) error {
 // @Failure 401 {object} map[string]string
 // @Router /auth/me [delete]
 func (h *AuthRoute) DeleteUser(c *fiber.Ctx) error {
-	var req DeleteUserRequest
+	var req presentation.DeleteUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
@@ -301,13 +271,4 @@ func (h *AuthRoute) DeleteUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "User deleted successfully",
 	})
-}
-
-func (h *AuthRoute) RegisterRoutes(router fiber.Router, authMiddleware fiber.Handler) {
-	router.Post("/register", h.Register)
-	router.Post("/login", h.Login)
-	router.Get("/me", authMiddleware, h.Me)
-	router.Put("/me", authMiddleware, h.UpdateUser)
-	router.Put("/change-password", authMiddleware, h.ChangePassword)
-	router.Delete("/me", authMiddleware, h.DeleteUser)
 }
